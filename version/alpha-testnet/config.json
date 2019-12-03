@@ -1,0 +1,25 @@
+{
+  "interval": 300,
+  "timeout_web3": 300,
+  "timeout_request": 10,
+  "partial_execution_steps": 100,
+  "networks": {
+    "local": {
+      "uri": "http://10.0.0.73:4444",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "0xAb242e50E95C2f539242763A4eD5Db1aEE5ce461",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0xE02f9AE8fe5Da307b6C7cd928AEa380392f5a395",
+        "MoCState": "0xe91d665b9A20BF72fF67E96d26F91E3de2beaF94"
+      }
+
+    }
+
+  }
+
+}

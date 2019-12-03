@@ -1,0 +1,25 @@
+{
+  "interval": 60,
+  "timeout_web3": 120,
+  "timeout_request": 10,
+  "partial_execution_steps": 100,
+  "networks": {
+    "local": {
+      "uri": "http://192.168.56.2:8545",
+      "network_id": 123456,
+      "accounts": [
+        {
+          "address": "0x0e424e9a8598a55918e12de47172f3180c4b4e13",
+          "private_key":  "0x9e790b185e5b7f11f2924c7b809936866c38ed3ab3f33e0fbd3cfe791c2cdbd6"
+        }
+      ],
+      "addresses": {
+        "MoC": "0x14bb5225e36F89A1650643B7c6AF83f9C0E7ddbA",
+        "MoCState": "0x1cCEc68641721f33C112c57F4332B5EffafF53F3"
+      }
+
+    }
+
+  }
+
+}
