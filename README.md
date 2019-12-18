@@ -16,9 +16,51 @@ This jobs run threaded, if one fail continue with next one and in this order.
 
 **time every tick:** 10 min
  
-### Requirements
+### Usage
 
- * Python 3.6+  
+**Requirement and installation**
+ 
+*  We need Python 3.6+
+
+Install libraries
+
+`pip install -r requirements.txt`
+
+**Usage Job**
+
+Make sure to change **config.json** to point to your network and
+pricefeed.
+
+`python moc_jobs.py`
+
+Alternatives:
+
+`python moc_jobs.py --config=path_to_config.json --network=local`
+
+**--config:** Path to config.json 
+
+**--network=local:** Network name in the json
+
+
+**Usage Docker**
+
+Build
+
+```
+docker build -t moc_jobs -f Dockerfile .
+```
+
+Run
+
+```
+docker run -d \
+--name moc_jobs_1 \
+--env ACCOUNT_ADDRESS=0x0e424e9a8598a55918e12de47172f3180c4b4e13 \
+--env ACCOUNT_PK_SECRET=0x9e790b185e5b7f11f2924c7b809936866c38ed3ab3f33e0fbd3cfe791c2cdbd6 \
+--env PRICE_FEEDER_NETWORK=local \
+moc_jobs
+```
+  
  
 ### Jobs explain
  

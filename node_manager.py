@@ -1,6 +1,5 @@
 from web3 import Web3
 import json
-from optparse import OptionParser
 import pprint
 import os
 
@@ -41,8 +40,6 @@ class NodeManager(object):
     def connect_node(self):
         """Connect to the node"""
         network = self.network
-        #self.web3 = Web3(Web3.HTTPProvider("http://{}:{}".format(self.options['networks'][network]['host'],
-        #                                                         self.options['networks'][network]['port'])))
         self.web3 = Web3(Web3.HTTPProvider(self.options['networks'][network]['uri'],
                                            request_kwargs={'timeout': self.options['timeout_web3']}))
 
@@ -92,17 +89,25 @@ class NodeManager(object):
         """ Transfer value to... """
         network = self.network
         default_account = self.default_account
-        pk = self.options['networks'][network]['accounts'][default_account]['private_key']
-        if not pk:
-            pk = os.environ['PK_SECRET']
+
+        # pk from enviroment or from json
+        if 'ACCOUNT_PK_SECRET' in os.environ:
+            pk = os.environ['ACCOUNT_PK_SECRET']
+        else:
+            pk = self.options['networks'][network]['accounts'][default_account]['private_key']
+
         return self.transfer(pk, to_address, value, unit=unit)
 
     def transfer(self, private_key, to_address, value, unit='wei'):
-        """ Tranferencia """
+        """ transfer """
         network = self.network
         default_account = self.default_account
 
-        from_address = self.options['networks'][network]['accounts'][default_account]['address']
+        # account from enviroment or from json
+        if 'ACCOUNT_ADDRESS' in os.environ:
+            from_address = os.environ['ACCOUNT_ADDRESS']
+        else:
+            from_address = self.options['networks'][network]['accounts'][default_account]['address']
 
         from_address = Web3.toChecksumAddress(from_address)
         to_address = Web3.toChecksumAddress(to_address)
@@ -132,8 +137,11 @@ class NodeManager(object):
         if not gas_limit:
             gas_limit = fnc.estimateGas()
 
-        from_address = self.options['networks'][network]['accounts'][default_account]['address']
-        from_address = Web3.toChecksumAddress(from_address)
+        # account from enviroment or from json
+        if 'ACCOUNT_ADDRESS' in os.environ:
+            from_address = Web3.toChecksumAddress(os.environ['ACCOUNT_ADDRESS'])
+        else:
+            from_address = Web3.toChecksumAddress(self.options['networks'][network]['accounts'][default_account]['address'])
 
         nonce = self.web3.eth.getTransactionCount(from_address)
 
@@ -174,10 +182,17 @@ class NodeManager(object):
 
         self.log.debug("Sending transaction to {} with {} as arguments.\n".format(function_, tx_args))
 
-        from_address = Web3.toChecksumAddress(self.options['networks'][network]['accounts'][default_account]['address'])
-        pk = self.options['networks'][network]['accounts'][default_account]['private_key']
-        if not pk:
-            pk = os.environ['PK_SECRET']
+        # account from enviroment or from json
+        if 'ACCOUNT_ADDRESS' in os.environ:
+            from_address = Web3.toChecksumAddress(os.environ['ACCOUNT_ADDRESS'])
+        else:
+            from_address = Web3.toChecksumAddress(self.options['networks'][network]['accounts'][default_account]['address'])
+
+        # pk from enviroment or from json
+        if 'ACCOUNT_PK_SECRET' in os.environ:
+            pk = os.environ['ACCOUNT_PK_SECRET']
+        else:
+            pk = self.options['networks'][network]['accounts'][default_account]['private_key']
 
         nonce = self.web3.eth.getTransactionCount(from_address)
 
@@ -222,10 +237,18 @@ class NodeManager(object):
 
         self.log.debug("Sending transaction to {} with {} as arguments.\n".format('Constructor', tx_args))
 
-        from_address = Web3.toChecksumAddress(self.options['networks'][network]['accounts'][default_account]['address'])
-        pk = self.options['networks'][network]['accounts'][default_account]['private_key']
-        if not pk:
-            pk = os.environ['PK_SECRET']
+        # account from enviroment or from json
+        if 'ACCOUNT_ADDRESS' in os.environ:
+            from_address = Web3.toChecksumAddress(os.environ['ACCOUNT_ADDRESS'])
+        else:
+            from_address = Web3.toChecksumAddress(
+                self.options['networks'][network]['accounts'][default_account]['address'])
+
+        # pk from enviroment or from json
+        if 'ACCOUNT_PK_SECRET' in os.environ:
+            pk = os.environ['ACCOUNT_PK_SECRET']
+        else:
+            pk = self.options['networks'][network]['accounts'][default_account]['private_key']
 
         nonce = self.web3.eth.getTransactionCount(from_address)
 

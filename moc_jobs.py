@@ -4,7 +4,6 @@ import datetime
 import json
 
 from timeloop import Timeloop
-from web3 import Web3
 import boto3
 import time
 

@@ -1,7 +1,7 @@
 FROM python:3.7
 
 # Autor
-LABEL maintainer='leonel.corso@moneyonchain.com'
+LABEL maintainer='martin.mulone@moneyonchain.com'
 
 RUN apt-get update && \
     apt-get install -y \
@@ -30,7 +30,7 @@ WORKDIR /home/www-data/app/moc_jobs/
 COPY build ./build
 COPY moc_jobs.py ./
 COPY node_manager.py ./
-COPY _launch_app.sh .
+COPY config.json ./
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
-CMD ["bash", "_launch_app.sh"]
+CMD ["/usr/bin/supervisord"]
