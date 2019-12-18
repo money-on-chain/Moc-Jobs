@@ -153,7 +153,7 @@ class NodeManager(object):
 
         return transaction_hash.hex()
 
-    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=2100000):
+    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=6800000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
@@ -202,7 +202,7 @@ class NodeManager(object):
 
         return transaction_hash
 
-    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=2100000):
+    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=6800000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
