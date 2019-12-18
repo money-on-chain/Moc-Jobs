@@ -287,7 +287,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocGanacheDesktop'
+            network = 'mocTestnetAlpha'
         else:
             network = options.network
 
