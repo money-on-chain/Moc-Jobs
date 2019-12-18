@@ -55,6 +55,97 @@ class ContractManager(NodeManager):
         self.MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
                                            deploy_address=address_moc)
 
+    def contract_liquidation(self):
+
+        self.connect_contract()
+
+        partial_execution_steps = self.options['partial_execution_steps']
+
+        log.info("Calling isLiquidationReached ..")
+        is_liquidation_reached = self.MoCState.functions.isLiquidationReached().call()
+        if is_liquidation_reached:
+            log.info("Calling evalLiquidation steps [{0}] ...".format(partial_execution_steps))
+            tx_hash = self.fnx_transaction(self.MoC, 'evalLiquidation', partial_execution_steps)
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
+        else:
+            log.info("No liquidation reached!")
+
+    def contract_bucket_liquidation(self):
+
+        partial_execution_steps = self.options['partial_execution_steps']
+
+        log.info("Calling isBucketLiquidationReached ..")
+        is_bucket_liquidation_reached = self.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
+        if is_bucket_liquidation_reached:
+            log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
+            tx_hash = self.fnx_transaction(self.MoC, 'evalBucketLiquidation', str.encode('X2'))
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
+        else:
+            log.info("No liquidation reached!")
+
+    def contract_run_settlement(self):
+
+        partial_execution_steps = self.options['partial_execution_steps']
+        log.info("Calling isSettlementEnabled ..")
+        is_settlement_enabled = self.MoC.functions.isSettlementEnabled().call()
+        if is_settlement_enabled:
+            log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
+            tx_hash = self.fnx_transaction(self.MoC, 'runSettlement', partial_execution_steps)
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully runSettlement in Block [{0}]".format(block_number))
+        else:
+            log.info("No settlement reached!")
+
+    def contract_daily_inrate_payment(self):
+
+        log.info("Calling isDailyEnabled ...")
+        is_daily_enabled = self.MoC.functions.isDailyEnabled().call()
+        if is_daily_enabled:
+            log.info("Calling dailyInratePayment ...")
+            tx_hash = self.fnx_transaction(self.MoC, 'dailyInratePayment')
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
+        else:
+            log.info("No isDailyEnabled reached!")
+
+    def contract_pay_bitpro_holders(self):
+
+        log.info("Calling isBitProInterestEnabled ...")
+        is_bitpro_enabled = self.MoC.functions.isBitProInterestEnabled().call()
+        if is_bitpro_enabled:
+            log.info("Calling payBitProHoldersInterestPayment ...")
+            tx_hash = self.fnx_transaction(self.MoC, 'payBitProHoldersInterestPayment')
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
+        else:
+            log.info("No isBitProInterestEnabled reached!")
+
+    def contract_calculate_bma(self):
+
+        log.info("Calling shouldCalculateEma ...")
+        is_ema_enabled = self.MoCState.functions.shouldCalculateEma().call()
+        if is_ema_enabled:
+            log.info("Calling calculateBitcoinMovingAverage ...")
+            tx_hash = self.fnx_transaction(self.MoCState, 'calculateBitcoinMovingAverage')
+            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            log.debug(tx_receipt)
+            block_number = self.block_number
+            log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
+        else:
+            log.info("No shouldCalculateEma reached!")
+
 
 class JobsManager:
 
@@ -65,10 +156,8 @@ class JobsManager:
         self.options = moc_jobs_config
         self.options['build_dir'] = build_dir_nm
 
-        self.nm = NodeManager(options=options, network=network_nm)
-        self.nm.set_log(log)
-
         self.cm = ContractManager(self.options, network_nm)
+        self.cm.set_log(log)
 
     @staticmethod
     def aws_put_metric_heart_beat(value):
@@ -97,129 +186,40 @@ class JobsManager:
             Namespace='MOC/JOBS'
         )
 
-    def contract_liquidation(self):
-
-        partial_execution_steps = self.options['partial_execution_steps']
-
-        log.info("Calling isLiquidationReached ..")
-        is_liquidation_reached = self.cm.MoCState.functions.isLiquidationReached().call()
-        if is_liquidation_reached:
-            log.info("Calling evalLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'evalLiquidation', partial_execution_steps)
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
-        else:
-            log.info("No liquidation reached!")
-
-    def contract_bucket_liquidation(self):
-
-        partial_execution_steps = self.options['partial_execution_steps']
-
-        log.info("Calling isBucketLiquidationReached ..")
-        is_bucket_liquidation_reached = self.cm.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
-        if is_bucket_liquidation_reached:
-            log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'evalBucketLiquidation', str.encode('X2'))
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
-        else:
-            log.info("No liquidation reached!")
-
-    def contract_run_settlement(self):
-
-        partial_execution_steps = self.options['partial_execution_steps']
-        log.info("Calling isSettlementEnabled ..")
-        is_settlement_enabled = self.cm.MoC.functions.isSettlementEnabled().call()
-        if is_settlement_enabled:
-            log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'runSettlement', partial_execution_steps)
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully runSettlement in Block [{0}]".format(block_number))
-        else:
-            log.info("No settlement reached!")
-
-    def contract_daily_inrate_payment(self):
-
-        log.info("Calling isDailyEnabled ...")
-        is_daily_enabled = self.cm.MoC.functions.isDailyEnabled().call()
-        if is_daily_enabled:
-            log.info("Calling dailyInratePayment ...")
-            tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'dailyInratePayment')
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
-        else:
-            log.info("No isDailyEnabled reached!")
-
-    def contract_pay_bitpro_holders(self):
-
-        log.info("Calling isBitProInterestEnabled ...")
-        is_bitpro_enabled = self.cm.MoC.functions.isBitProInterestEnabled().call()
-        if is_bitpro_enabled:
-            log.info("Calling payBitProHoldersInterestPayment ...")
-            tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'payBitProHoldersInterestPayment')
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
-        else:
-            log.info("No isBitProInterestEnabled reached!")
-
-    def contract_calculate_bma(self):
-
-        log.info("Calling shouldCalculateEma ...")
-        is_ema_enabled = self.cm.MoCState.functions.shouldCalculateEma().call()
-        if is_ema_enabled:
-            log.info("Calling calculateBitcoinMovingAverage ...")
-            tx_hash = self.nm.fnx_transaction(self.cm.MoCState, 'calculateBitcoinMovingAverage')
-            tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-            log.debug(tx_receipt)
-            block_number = self.nm.block_number
-            log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
-        else:
-            log.info("No shouldCalculateEma reached!")
-
     def contracts_tasks(self):
 
         try:
-            self.contract_liquidation()
+            self.cm.contract_liquidation()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
         try:
-            self.contract_bucket_liquidation()
+            self.cm.contract_bucket_liquidation()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
         try:
-            self.contract_run_settlement()
+            self.cm.contract_run_settlement()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
         try:
-            self.contract_daily_inrate_payment()
+            self.cm.contract_daily_inrate_payment()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
         try:
-            self.contract_pay_bitpro_holders()
+            self.cm.contract_pay_bitpro_holders()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
         try:
-            self.contract_calculate_bma()
+            self.cm.contract_calculate_bma()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
@@ -227,7 +227,6 @@ class JobsManager:
     def schedule_jobs(self):
 
         try:
-            self.cm.connect_contract()
             self.contracts_tasks()
             self.aws_put_metric_heart_beat(1)
         except Exception as e:
@@ -287,7 +286,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocTestnetAlpha'
+            network = 'mocTestnet'
         else:
             network = options.network
 

@@ -1,5 +1,5 @@
 {
-  "interval": 60,
+  "interval": 180,
   "timeout_web3": 120,
   "timeout_request": 10,
   "partial_execution_steps": 100,
