@@ -3,7 +3,6 @@ FROM python:3.7
 # Autor
 LABEL maintainer='leonel.corso@moneyonchain.com'
 
-
 RUN apt-get update && \
     apt-get install -y \
         locales \

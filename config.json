@@ -1,0 +1,70 @@
+{
+  "interval": 300,
+  "timeout_web3": 120,
+  "timeout_request": 10,
+  "partial_execution_steps": 100,
+  "networks": {
+    "mocGanacheDesktop": {
+      "uri": "http://192.168.56.2:8545",
+      "network_id": 123456,
+      "accounts": [
+        {
+          "address": "0x0e424e9a8598a55918e12de47172f3180c4b4e13",
+          "private_key":  "0x9e790b185e5b7f11f2924c7b809936866c38ed3ab3f33e0fbd3cfe791c2cdbd6"
+        }
+      ],
+      "addresses": {
+        "MoC": "0x14bb5225e36F89A1650643B7c6AF83f9C0E7ddbA",
+        "MoCState": "0x1cCEc68641721f33C112c57F4332B5EffafF53F3"
+      }
+
+    },
+    "mocTestnetAlpha": {
+      "uri": "http://13.52.161.255:4444",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "0xAb242e50E95C2f539242763A4eD5Db1aEE5ce461",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0xE02f9AE8fe5Da307b6C7cd928AEa380392f5a395",
+        "MoCState": "0xe91d665b9A20BF72fF67E96d26F91E3de2beaF94"
+      }
+
+    },
+    "mocTestnet": {
+      "uri": "http://13.52.161.255:4444",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "0xE2929d888015EB568AFfa06aaB946923a7236Ad9",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
+        "MoCState": "0x0adb40132cB0ffcEf6ED81c26A1881e214100555"
+      }
+
+    },
+    "mocMainnet2": {
+      "uri": "https://public-node.rsk.co",
+      "network_id": 30,
+      "accounts": [
+        {
+          "address": "0xeA14c08764C9e5f212c916E11A5c47EAf92571e4",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
+        "MoCState": "0xb9C42EFc8ec54490a37cA91c423F7285Fa01e257"
+      }
+
+    }
+
+  }
+
+}

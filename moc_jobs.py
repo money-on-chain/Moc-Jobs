@@ -33,37 +33,50 @@ logging.getLogger('').addHandler(console)
 log = logging.getLogger('default')
 
 
-class ContractManager:
-    MoCState = None
-    MoC = None
+class ContractManager(NodeManager):
+
+    def __init__(self, config_options, network_nm):
+        self.options = config_options
+        self.MoCState = None
+        self.MoC = None
+        super().__init__(options=config_options, network=network_nm)
+
+    def connect_contract(self):
+        self.connect_node()
+        self.load_contracts()
+
+    def load_contracts(self):
+
+        path_build = self.options['build_dir']
+        address_moc_state = self.options['networks'][network]['addresses']['MoCState']
+        address_moc = self.options['networks'][network]['addresses']['MoC']
+
+        self.MoCState = self.load_json_contract(os.path.join(path_build, "MoCState.json"),
+                                                deploy_address=address_moc_state)
+        self.MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
+                                           deploy_address=address_moc)
 
 
 class JobsManager:
 
-    tl = Timeloop()
+    def __init__(self, moc_jobs_config, network_nm, build_dir_nm):
 
-    def __init__(self, path_to_config, network_nm, build_dir_nm):
+        self.tl = Timeloop()
 
-        config_options = self.options_from_config(path_to_config)
-        config_options['build_dir'] = build_dir_nm
-        self.options = config_options
+        self.options = moc_jobs_config
+        self.options['build_dir'] = build_dir_nm
 
-        self.nm = NodeManager(options=config_options, network=network_nm)
+        self.nm = NodeManager(options=options, network=network_nm)
         self.nm.set_log(log)
 
-        self.cm = ContractManager()
-
-    @staticmethod
-    def options_from_config(filename='config.json'):
-        """ Options from file config.json """
-
-        with open(filename) as f:
-            config_options = json.load(f)
-
-        return config_options
+        self.cm = ContractManager(self.options, network_nm)
 
     @staticmethod
     def aws_put_metric_heart_beat(value):
+
+        if 'AWS_ACCESS_KEY_ID' not in os.environ:
+            return
+
         # Create CloudWatch client
         cloudwatch = boto3.client('cloudwatch')
 
@@ -84,21 +97,6 @@ class JobsManager:
             ],
             Namespace='MOC/JOBS'
         )
-
-    def connect(self):
-        self.nm.connect_node()
-        self.load_contracts()
-
-    def load_contracts(self):
-
-        path_build = self.options['build_dir']
-        address_moc_state = self.options['networks'][network]['addresses']['MoCState']
-        address_moc = self.options['networks'][network]['addresses']['MoC']
-
-        self.cm.MoCState = self.nm.load_json_contract(os.path.join(path_build, "MoCState.json"),
-                                                      deploy_address=address_moc_state)
-        self.cm.MoC = self.nm.load_json_contract(os.path.join(path_build, "MoC.json"),
-                                                 deploy_address=address_moc)
 
     def contract_liquidation(self):
 
@@ -230,7 +228,7 @@ class JobsManager:
     def schedule_jobs(self):
 
         try:
-            self.connect()
+            self.cm.connect_contract()
             self.contracts_tasks()
             self.aws_put_metric_heart_beat(1)
         except Exception as e:
@@ -254,6 +252,15 @@ class JobsManager:
                 break
 
 
+def options_from_config(filename='config.json'):
+    """ Options from file config.json """
+
+    with open(filename) as f:
+        config_options = json.load(f)
+
+    return config_options
+
+
 if __name__ == '__main__':
 
     usage = '%prog [options] '
@@ -267,20 +274,28 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
-    if not options.config:
-        config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'version', 'alpha-testnet', 'config.json')
+    if 'MOC_JOBS_CONFIG' in os.environ:
+        config = json.loads(os.environ['MOC_JOBS_CONFIG'])
     else:
-        config_path = options.config
+        if not options.config:
+            config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.json')
+        else:
+            config_path = options.config
 
-    if not options.network:
-        network = 'local'
+        config = options_from_config(config_path)
+
+    if 'MOC_JOBS_NETWORK' in os.environ:
+        network = os.environ['MOC_JOBS_NETWORK']
     else:
-        network = options.network
+        if not options.network:
+            network = 'mocGanacheDesktop'
+        else:
+            network = options.network
 
     if not options.build:
         build_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'build')
     else:
         build_dir = options.build
 
-    jm = JobsManager(config_path, network, build_dir)
+    jm = JobsManager(config, network, build_dir)
     jm.time_loop_start()
