@@ -57,7 +57,7 @@ docker run -d \
 --name moc_jobs_1 \
 --env ACCOUNT_ADDRESS=0x0e424e9a8598a55918e12de47172f3180c4b4e13 \
 --env ACCOUNT_PK_SECRET=0x9e790b185e5b7f11f2924c7b809936866c38ed3ab3f33e0fbd3cfe791c2cdbd6 \
---env PRICE_FEEDER_NETWORK=local \
+--env MOC_JOBS_NETWORK=local \
 moc_jobs
 ```
   
