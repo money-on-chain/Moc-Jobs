@@ -1,6 +1,6 @@
 {
-  "interval": 180,
-  "timeout_web3": 120,
+  "interval": 120,
+  "timeout_web3": 180,
   "timeout_request": 10,
   "partial_execution_steps": 20,
   "gas_price": 66000000,
