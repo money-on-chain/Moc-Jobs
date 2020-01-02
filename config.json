@@ -2,7 +2,7 @@
   "interval": 180,
   "timeout_web3": 120,
   "timeout_request": 10,
-  "partial_execution_steps": 100,
+  "partial_execution_steps": 20,
   "gas_price": 66000000,
   "networks": {
     "mocGanacheDesktop": {
@@ -21,7 +21,7 @@
 
     },
     "mocTestnetAlpha": {
-      "uri": "http://13.52.161.255:4444",
+      "uri": "https://public-node.testnet.rsk.co",
       "network_id": 31,
       "accounts": [
         {
