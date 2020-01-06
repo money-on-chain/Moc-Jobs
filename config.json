@@ -1,9 +1,9 @@
 {
-  "interval": 120,
+  "interval": 60,
   "timeout_web3": 180,
   "timeout_request": 10,
   "partial_execution_steps": 20,
-  "gas_price": 66000000,
+  "gas_price": 60000000,
   "networks": {
     "mocGanacheDesktop": {
       "uri": "http://192.168.56.2:8545",
