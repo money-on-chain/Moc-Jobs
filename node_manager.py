@@ -51,6 +51,9 @@ class NodeManager(object):
     @property
     def is_connected(self):
         """ Is connected to the node """
+        if not self.web3:
+            return False
+
         return self.web3.isConnected()
 
     @property

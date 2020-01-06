@@ -1,8 +1,40 @@
 {
-  "interval": 60,
-  "timeout_web3": 180,
-  "timeout_request": 10,
-  "partial_execution_steps": 20,
+  "tasks": {
+    "run_settlement": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "liquidation": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "bucket_liquidation": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "daily_inrate_payment": {
+      "interval": 140,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "pay_bitpro_holders": {
+      "interval": 150,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "calculate_bma": {
+      "interval": 130,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout_web3": 30,
   "gas_price": 60000000,
   "networks": {
     "mocGanacheDesktop": {
@@ -21,12 +53,12 @@
 
     },
     "mocTestnetAlpha": {
-      "uri": "https://public-node.testnet.rsk.co",
+      "uri": "http://localhost:4444",
       "network_id": 31,
       "accounts": [
         {
           "address": "0xAb242e50E95C2f539242763A4eD5Db1aEE5ce461",
-          "private_key":  ""
+          "private_key":  "8c988a702df06f6d93302f43c13f9d4338585b179161a868e4a9123ce2dda4e8"
         }
       ],
       "addresses": {
