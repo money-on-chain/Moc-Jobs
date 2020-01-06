@@ -4,6 +4,8 @@
   "timeout_request": 10,
   "partial_execution_steps": 20,
   "gas_price": 66000000,
+  "mongo_uri": "mongodb://192.168.56.2:27017/",
+  "mongo_db": "ganche_desktop",
   "networks": {
     "mocGanacheDesktop": {
       "uri": "http://192.168.56.2:8545",
@@ -15,8 +17,9 @@
         }
       ],
       "addresses": {
-        "MoC": "0x14bb5225e36F89A1650643B7c6AF83f9C0E7ddbA",
-        "MoCState": "0x1cCEc68641721f33C112c57F4332B5EffafF53F3"
+        "MoC": "0x4D98B0e4fB2C317d70b04915402789d544e8e5FC",
+        "MoCState": "0x1a145d6C68f77B7785D5917dF2c94273CF4Eed68",
+        "MoCInrate": "0x42012184Fd86a764DDa4E965360C1466E05E642a"
       }
 
     },
