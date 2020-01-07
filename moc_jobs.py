@@ -41,8 +41,11 @@ class ContractManager(NodeManager):
         super().__init__(options=config_options, network=network_nm)
 
     def connect_contract(self):
-        self.connect_node()
-        self.load_contracts()
+
+        if not self.is_connected:
+            log.info("Making new connection....")
+            self.connect_node()
+            self.load_contracts()
 
     def load_contracts(self):
 
@@ -59,14 +62,15 @@ class ContractManager(NodeManager):
 
         self.connect_contract()
 
-        partial_execution_steps = self.options['partial_execution_steps']
+        partial_execution_steps = self.options['tasks']['liquidation']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['liquidation']['wait_timeout']
+        gas_limit = self.options['tasks']['liquidation']['gas_limit']
 
-        log.info("Calling isLiquidationReached ..")
         is_liquidation_reached = self.MoCState.functions.isLiquidationReached().call()
         if is_liquidation_reached:
             log.info("Calling evalLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalLiquidation', partial_execution_steps)
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoC, 'evalLiquidation', partial_execution_steps, gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
@@ -75,29 +79,36 @@ class ContractManager(NodeManager):
 
     def contract_bucket_liquidation(self):
 
-        partial_execution_steps = self.options['partial_execution_steps']
+        self.connect_contract()
 
-        log.info("Calling isBucketLiquidationReached ..")
+        partial_execution_steps = self.options['tasks']['bucket_liquidation']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
+        gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
+
         is_bucket_liquidation_reached = self.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
         if is_bucket_liquidation_reached:
             log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalBucketLiquidation', str.encode('X2'))
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoC, 'evalBucketLiquidation', str.encode('X2'), gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
         else:
-            log.info("No liquidation reached!")
+            log.info("No bucket liquidation reached!")
 
     def contract_run_settlement(self):
 
-        partial_execution_steps = self.options['partial_execution_steps']
-        log.info("Calling isSettlementEnabled ..")
+        self.connect_contract()
+
+        partial_execution_steps = self.options['tasks']['run_settlement']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['run_settlement']['wait_timeout']
+        gas_limit = self.options['tasks']['run_settlement']['gas_limit']
+
         is_settlement_enabled = self.MoC.functions.isSettlementEnabled().call()
         if is_settlement_enabled:
             log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'runSettlement', partial_execution_steps)
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoC, 'runSettlement', partial_execution_steps, gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully runSettlement in Block [{0}]".format(block_number))
@@ -106,12 +117,16 @@ class ContractManager(NodeManager):
 
     def contract_daily_inrate_payment(self):
 
-        log.info("Calling isDailyEnabled ...")
+        self.connect_contract()
+
+        wait_timeout = self.options['tasks']['daily_inrate_payment']['wait_timeout']
+        gas_limit = self.options['tasks']['daily_inrate_payment']['gas_limit']
+
         is_daily_enabled = self.MoC.functions.isDailyEnabled().call()
         if is_daily_enabled:
             log.info("Calling dailyInratePayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'dailyInratePayment')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoC, 'dailyInratePayment', gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
@@ -120,12 +135,16 @@ class ContractManager(NodeManager):
 
     def contract_pay_bitpro_holders(self):
 
-        log.info("Calling isBitProInterestEnabled ...")
+        self.connect_contract()
+
+        wait_timeout = self.options['tasks']['pay_bitpro_holders']['wait_timeout']
+        gas_limit = self.options['tasks']['pay_bitpro_holders']['gas_limit']
+
         is_bitpro_enabled = self.MoC.functions.isBitProInterestEnabled().call()
         if is_bitpro_enabled:
             log.info("Calling payBitProHoldersInterestPayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'payBitProHoldersInterestPayment')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoC, 'payBitProHoldersInterestPayment', gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
@@ -134,12 +153,16 @@ class ContractManager(NodeManager):
 
     def contract_calculate_bma(self):
 
-        log.info("Calling shouldCalculateEma ...")
+        self.connect_contract()
+
+        wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
+        gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
+
         is_ema_enabled = self.MoCState.functions.shouldCalculateEma().call()
         if is_ema_enabled:
             log.info("Calling calculateBitcoinMovingAverage ...")
-            tx_hash = self.fnx_transaction(self.MoCState, 'calculateBitcoinMovingAverage')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.MoCState, 'calculateBitcoinMovingAverage', gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
@@ -186,19 +209,7 @@ class JobsManager:
             Namespace='MOC/JOBS'
         )
 
-    def contracts_tasks(self):
-
-        try:
-            self.cm.contract_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
-
-        try:
-            self.cm.contract_bucket_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+    def task_run_settlement(self):
 
         try:
             self.cm.contract_run_settlement()
@@ -206,11 +217,31 @@ class JobsManager:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
+    def task_liquidation(self):
+
+        try:
+            self.cm.contract_liquidation()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(0)
+
+    def task_bucket_liquidation(self):
+
+        try:
+            self.cm.contract_bucket_liquidation()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(0)
+
+    def task_daily_inrate_payment(self):
+
         try:
             self.cm.contract_daily_inrate_payment()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
+
+    def task_pay_bitpro_holders(self):
 
         try:
             self.cm.contract_pay_bitpro_holders()
@@ -218,24 +249,47 @@ class JobsManager:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
+    def task_calculate_bma(self):
+
         try:
             self.cm.contract_calculate_bma()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(0)
 
-    def schedule_jobs(self):
-
-        try:
-            self.contracts_tasks()
-            self.aws_put_metric_heart_beat(1)
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
-
     def add_jobs(self):
 
-        self.tl._add_job(self.schedule_jobs, datetime.timedelta(seconds=self.options['interval']))
+        log.info("Starting adding jobs...")
+
+        # run_settlement
+        log.info("Jobs add run_settlement")
+        interval = self.options['tasks']['run_settlement']['interval']
+        self.tl._add_job(self.task_run_settlement, datetime.timedelta(seconds=interval))
+
+        # liquidation
+        log.info("Jobs add liquidation")
+        interval = self.options['tasks']['liquidation']['interval']
+        self.tl._add_job(self.task_liquidation, datetime.timedelta(seconds=interval))
+
+        # bucket_liquidation
+        log.info("Jobs add bucket_liquidation")
+        interval = self.options['tasks']['bucket_liquidation']['interval']
+        self.tl._add_job(self.task_bucket_liquidation, datetime.timedelta(seconds=interval))
+
+        # daily_inrate_payment
+        log.info("Jobs add daily_inrate_payment")
+        interval = self.options['tasks']['daily_inrate_payment']['interval']
+        self.tl._add_job(self.task_daily_inrate_payment, datetime.timedelta(seconds=interval))
+
+        # pay_bitpro_holders
+        log.info("Jobs add pay_bitpro_holders")
+        interval = self.options['tasks']['pay_bitpro_holders']['interval']
+        self.tl._add_job(self.task_pay_bitpro_holders, datetime.timedelta(seconds=interval))
+
+        # calculate_bma
+        log.info("Jobs add calculate_bma")
+        interval = self.options['tasks']['calculate_bma']['interval']
+        self.tl._add_job(self.task_calculate_bma, datetime.timedelta(seconds=interval))
 
     def time_loop_start(self):
 
@@ -247,6 +301,7 @@ class JobsManager:
                 time.sleep(1)
             except KeyboardInterrupt:
                 self.tl.stop()
+                log.info("Shutting DOWN! TASKS")
                 break
 
 

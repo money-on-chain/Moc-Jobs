@@ -51,6 +51,9 @@ class NodeManager(object):
     @property
     def is_connected(self):
         """ Is connected to the node """
+        if not self.web3:
+            return False
+
         return self.web3.isConnected()
 
     @property
@@ -133,7 +136,7 @@ class NodeManager(object):
         return self.web3.eth.sendRawTransaction(
             signed_transaction.rawTransaction)
 
-    def transaction(self, fnc, private_key, value=0, gas_limit=0):
+    def transaction(self, fnc, private_key, value=0, gas_limit=2000000):
 
         network = self.network
         default_account = self.default_account
@@ -169,7 +172,7 @@ class NodeManager(object):
 
         return transaction_hash.hex()
 
-    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=5800000):
+    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=3500000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
@@ -229,7 +232,7 @@ class NodeManager(object):
 
         return transaction_hash
 
-    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=5800000):
+    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=3500000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
