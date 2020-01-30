@@ -8,7 +8,7 @@ import boto3
 import time
 
 # local imports
-from node_manager import NodeManager
+from contracts_manager import NodeManager
 
 import logging
 import logging.config
@@ -35,17 +35,14 @@ log = logging.getLogger('default')
 class ContractManager(NodeManager):
 
     def __init__(self, config_options, network_nm):
+
         self.options = config_options
-        self.MoCState = None
-        self.MoC = None
+        self.contract_MoCState = None
+        self.contract_MoC = None
+
         super().__init__(options=config_options, network=network_nm)
-
-    def connect_contract(self):
-
-        if not self.is_connected:
-            log.info("Making new connection....")
-            self.connect_node()
-            self.load_contracts()
+        self.connect_node()
+        self.load_contracts()
 
     def load_contracts(self):
 
@@ -53,23 +50,23 @@ class ContractManager(NodeManager):
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
 
-        self.MoCState = self.load_json_contract(os.path.join(path_build, "MoCState.json"),
-                                                deploy_address=address_moc_state)
-        self.MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
-                                           deploy_address=address_moc)
+        self.contract_MoCState = self.load_json_contract(os.path.join(path_build, "MoCState.json"),
+                                                         deploy_address=address_moc_state)
+        self.contract_MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
+                                                    deploy_address=address_moc)
 
     def contract_liquidation(self):
-
-        self.connect_contract()
 
         partial_execution_steps = self.options['tasks']['liquidation']['partial_execution_steps']
         wait_timeout = self.options['tasks']['liquidation']['wait_timeout']
         gas_limit = self.options['tasks']['liquidation']['gas_limit']
 
-        is_liquidation_reached = self.MoCState.functions.isLiquidationReached().call()
+        is_liquidation_reached = self.contract_MoCState.functions.isLiquidationReached().call()
         if is_liquidation_reached:
             log.info("Calling evalLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalLiquidation', partial_execution_steps, gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'evalLiquidation',
+                                           partial_execution_steps,
+                                           gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
@@ -79,16 +76,16 @@ class ContractManager(NodeManager):
 
     def contract_bucket_liquidation(self):
 
-        self.connect_contract()
-
         partial_execution_steps = self.options['tasks']['bucket_liquidation']['partial_execution_steps']
         wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
         gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
-        is_bucket_liquidation_reached = self.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
+        is_bucket_liquidation_reached = self.contract_MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
         if is_bucket_liquidation_reached:
             log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalBucketLiquidation', str.encode('X2'), gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'evalBucketLiquidation',
+                                           str.encode('X2'),
+                                           gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
@@ -98,16 +95,16 @@ class ContractManager(NodeManager):
 
     def contract_run_settlement(self):
 
-        self.connect_contract()
-
         partial_execution_steps = self.options['tasks']['run_settlement']['partial_execution_steps']
         wait_timeout = self.options['tasks']['run_settlement']['wait_timeout']
         gas_limit = self.options['tasks']['run_settlement']['gas_limit']
 
-        is_settlement_enabled = self.MoC.functions.isSettlementEnabled().call()
+        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
         if is_settlement_enabled:
             log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'runSettlement', partial_execution_steps, gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement',
+                                           partial_execution_steps,
+                                           gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
@@ -117,15 +114,13 @@ class ContractManager(NodeManager):
 
     def contract_daily_inrate_payment(self):
 
-        self.connect_contract()
-
         wait_timeout = self.options['tasks']['daily_inrate_payment']['wait_timeout']
         gas_limit = self.options['tasks']['daily_inrate_payment']['gas_limit']
 
-        is_daily_enabled = self.MoC.functions.isDailyEnabled().call()
+        is_daily_enabled = self.contract_MoC.functions.isDailyEnabled().call()
         if is_daily_enabled:
             log.info("Calling dailyInratePayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'dailyInratePayment', gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'dailyInratePayment', gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
@@ -135,15 +130,19 @@ class ContractManager(NodeManager):
 
     def contract_pay_bitpro_holders(self):
 
-        self.connect_contract()
-
         wait_timeout = self.options['tasks']['pay_bitpro_holders']['wait_timeout']
         gas_limit = self.options['tasks']['pay_bitpro_holders']['gas_limit']
 
-        is_bitpro_enabled = self.MoC.functions.isBitProInterestEnabled().call()
+        if self.options['app_mode'] == 'RRC20':
+            is_bitpro_enabled = self.contract_MoC.functions.isRiskProInterestEnabled().call()
+            contract_function = 'payRiskProHoldersInterestPayment'
+        else:
+            is_bitpro_enabled = self.contract_MoC.functions.isBitProInterestEnabled().call()
+            contract_function = 'payBitProHoldersInterestPayment'
+
         if is_bitpro_enabled:
             log.info("Calling payBitProHoldersInterestPayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'payBitProHoldersInterestPayment', gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoC, contract_function, gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
@@ -153,15 +152,14 @@ class ContractManager(NodeManager):
 
     def contract_calculate_bma(self):
 
-        self.connect_contract()
-
         wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
         gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
 
-        is_ema_enabled = self.MoCState.functions.shouldCalculateEma().call()
+        is_ema_enabled = self.contract_MoCState.functions.shouldCalculateEma().call()
         if is_ema_enabled:
             log.info("Calling calculateBitcoinMovingAverage ...")
-            tx_hash = self.fnx_transaction(self.MoCState, 'calculateBitcoinMovingAverage', gas_limit=gas_limit)
+            tx_hash = self.fnx_transaction(self.contract_MoCState, 'calculateBitcoinMovingAverage',
+                                           gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
