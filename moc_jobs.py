@@ -34,6 +34,60 @@ logging.getLogger('').addHandler(console)
 
 log = logging.getLogger('default')
 
+"""
+Search and update pending transactions status.
+
+const findEvents = web3 => (tx, eventName, eventArgs) => {
+  const txLogs = decodeLogs(tx);
+  const logs = txLogs.filter(log => log && log.name === eventName);
+  const events = logs.map(log => transformEvent(web3, log, tx));
+
+  // Filter
+  if (eventArgs) {
+    return events.filter(ev => Object.entries(eventArgs).every(([k, v]) => ev[k] === v));
+  }
+
+  return events;
+};
+
+module.findEvents = async (transactionHash, eventName, eventArgs) => {
+    const txReceipt = await web3.eth.getTransactionReceipt(transactionHash);
+    return decoder.findEvents(txReceipt, eventName, eventArgs);
+  };
+
+const processTransaction = async (nodeManager, tx) => {
+  const { transactionHash } = tx;
+  const txReceipt = await nodeManager.getTransactionReceipt(transactionHash);
+  const { status } = txReceipt;
+  logInfo({ message: `Transaction receipt for hash: ${transactionHash}.`, data: txReceipt });
+  if (status === true) {
+    const { event } = tx;
+    const [eventObject] = await nodeManager.findEvents(transactionHash, event);
+    if (eventObject) {
+      return updateTransactions(nodeManager, eventObject, false);
+    }
+    logWarn({
+      message: `Transaction receipt with hash: ${transactionHash} does not contain logs.`,
+      data: txReceipt
+    });
+  }
+  return updateFailedTransactions(transactionHash);
+};
+
+
+const updatePendingTransactions = async nodeManager => {
+  // TODO: change query when exist isMined state
+  const txs = Transaction.find({
+    status: commonTxStates.pending,
+    confirmationTime: { $not: { $exists: true } }
+  }).fetch();
+
+  const promises = txs.map(tx => processTransaction(nodeManager, tx));
+  return Promise.all(promises);
+};
+
+"""
+
 
 class ContractManager(NodeManager):
 
