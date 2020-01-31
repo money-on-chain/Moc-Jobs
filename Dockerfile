@@ -30,7 +30,7 @@ WORKDIR /home/www-data/app/moc_jobs/
 COPY build/ ./build/
 COPY moc_jobs.py ./
 COPY contracts_manager.py ./
-COPY config.json ./
+#COPY config.json ./
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
 CMD ["/usr/bin/supervisord"]
