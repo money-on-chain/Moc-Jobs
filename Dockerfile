@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
     && mkdir /home/www-data/app/moc_jobs \
+    && mkdir /home/www-data/app/moc_jobs/build \
+    && mkdir /home/www-data/app/moc_jobs/build/moc \
+    && mkdir /home/www-data/app/moc_jobs/build/rrc20 \
     && mkdir /home/www-data/app/moc_jobs/logs
 
 # We start copying all the files inside the container as AWS FARGATE does not support volumes
@@ -27,7 +30,8 @@ RUN mkdir /home/www-data && mkdir /home/www-data/app \
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /home/www-data/app/moc_jobs/
-COPY build/ ./build/
+COPY build/moc/* ./build/moc/
+COPY build/rrc20/* ./build/rrc20/
 COPY moc_jobs.py ./
 COPY contracts_manager.py ./
 #COPY config.json ./
