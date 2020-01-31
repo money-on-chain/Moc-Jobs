@@ -53,15 +53,9 @@ class ContractManager(NodeManager):
         else:
             raise Exception("Not valid APP Mode")
 
-        log.info("Init contracts mode: {0}".format(folder))
-        log.info(self.options)
-
         path_build = self.options['build_dir']
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
-
-        log.info("MoCState address: {0} ".format(address_moc_state))
-        log.info("Dir: {0} ".format(os.path.join(path_build, folder, "MoCState.json")))
 
         self.contract_MoCState = self.load_json_contract(os.path.join(path_build, folder, "MoCState.json"),
                                                          deploy_address=address_moc_state)
@@ -165,14 +159,11 @@ class ContractManager(NodeManager):
 
     def contract_calculate_bma(self):
 
-        self.connect_node()
-        self.load_contracts()
-
         wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
         gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
 
         if self.options['app_mode'] == 'RRC20':
-            contract_function = 'setExponentalMovingAverage'
+            contract_function = 'calculateReserveTokenMovingAverage'
         else:
             contract_function = 'calculateBitcoinMovingAverage'
 
