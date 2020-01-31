@@ -155,11 +155,17 @@ class ContractManager(NodeManager):
         wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
         gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
 
+        if self.options['app_mode'] == 'RRC20':
+            contract_function = 'setExponentalMovingAverage'
+        else:
+            contract_function = 'calculateBitcoinMovingAverage'
+
         is_ema_enabled = self.contract_MoCState.functions.shouldCalculateEma().call()
         if is_ema_enabled:
             log.info("Calling calculateBitcoinMovingAverage ...")
-            tx_hash = self.fnx_transaction(self.contract_MoCState, 'calculateBitcoinMovingAverage',
+            tx_hash = self.fnx_transaction(self.contract_MoCState, contract_function,
                                            gas_limit=gas_limit)
+
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
