@@ -60,6 +60,9 @@ class ContractManager(NodeManager):
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
 
+        log.info("MoCState address: {0} ".format(address_moc_state))
+        log.info("Dir: {0} ".format(os.path.join(path_build, folder, "MoCState.json")))
+
         self.contract_MoCState = self.load_json_contract(os.path.join(path_build, folder, "MoCState.json"),
                                                          deploy_address=address_moc_state)
         self.contract_MoC = self.load_json_contract(os.path.join(path_build, folder, "MoC.json"),
