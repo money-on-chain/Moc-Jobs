@@ -53,6 +53,8 @@ class ContractManager(NodeManager):
         else:
             raise Exception("Not valid APP Mode")
 
+        log.info("Init contracts mode: {0}".format(folder))
+
         path_build = self.options['build_dir']
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
