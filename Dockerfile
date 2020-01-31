@@ -27,7 +27,7 @@ RUN mkdir /home/www-data && mkdir /home/www-data/app \
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /home/www-data/app/moc_jobs/
-#COPY build ./build
+COPY build/ ./build/
 COPY moc_jobs.py ./
 COPY contracts_manager.py ./
 COPY config.json ./
