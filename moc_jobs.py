@@ -46,13 +46,20 @@ class ContractManager(NodeManager):
 
     def load_contracts(self):
 
+        if self.options['app_mode'] == 'RRC20':
+            folder = 'rrc20'
+        elif self.options['app_mode'] == 'MoC':
+            folder = 'moc'
+        else:
+            raise Exception("Not valid APP Mode")
+
         path_build = self.options['build_dir']
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
 
-        self.contract_MoCState = self.load_json_contract(os.path.join(path_build, "MoCState.json"),
+        self.contract_MoCState = self.load_json_contract(os.path.join(path_build, folder, "MoCState.json"),
                                                          deploy_address=address_moc_state)
-        self.contract_MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
+        self.contract_MoC = self.load_json_contract(os.path.join(path_build, folder, "MoC.json"),
                                                     deploy_address=address_moc)
 
     def contract_liquidation(self):
