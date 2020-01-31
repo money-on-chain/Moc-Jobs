@@ -29,7 +29,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 WORKDIR /home/www-data/app/moc_jobs/
 COPY build ./build
 COPY moc_jobs.py ./
-COPY node_manager.py ./
+COPY contracts_manager.py ./
 COPY config.json ./
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
