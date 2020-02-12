@@ -106,10 +106,10 @@ class ContractManager(NodeManager):
         wait_timeout = self.options['tasks']['run_settlement']['wait_timeout']
         gas_limit = self.options['tasks']['run_settlement']['gas_limit']
 
-        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
+        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled('a').call()
         if is_settlement_enabled:
             log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement1',
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement',
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
