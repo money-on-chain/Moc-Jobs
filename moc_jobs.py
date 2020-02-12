@@ -272,6 +272,9 @@ class JobsManager:
 
         log.info("Starting adding jobs...")
 
+        # creating the alarm
+        self.aws_put_metric_heart_beat(0)
+
         # run_settlement
         log.info("Jobs add run_settlement")
         interval = self.options['tasks']['run_settlement']['interval']
