@@ -209,15 +209,15 @@ class JobsManager:
                     'MetricName': os.environ['MOC_JOBS_NAME'],
                     'Dimensions': [
                         {
-                            'Name': 'MoCJobs',
-                            'Value': 'Status'
+                            'Name': 'JOBS',
+                            'Value': 'Error'
                         },
                     ],
                     'Unit': 'None',
                     'Value': value
                 },
             ],
-            Namespace='MOC/JOBS'
+            Namespace='MOC/EXCEPTIONS'
         )
 
     def task_run_settlement(self):
@@ -226,7 +226,7 @@ class JobsManager:
             self.cm.contract_run_settlement()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def task_liquidation(self):
 
@@ -234,7 +234,7 @@ class JobsManager:
             self.cm.contract_liquidation()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def task_bucket_liquidation(self):
 
@@ -242,7 +242,7 @@ class JobsManager:
             self.cm.contract_bucket_liquidation()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def task_daily_inrate_payment(self):
 
@@ -250,7 +250,7 @@ class JobsManager:
             self.cm.contract_daily_inrate_payment()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def task_pay_bitpro_holders(self):
 
@@ -258,7 +258,7 @@ class JobsManager:
             self.cm.contract_pay_bitpro_holders()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def task_calculate_bma(self):
 
@@ -266,7 +266,7 @@ class JobsManager:
             self.cm.contract_calculate_bma()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
 
     def add_jobs(self):
 
@@ -352,7 +352,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocRdocTestnet'
+            network = 'local'
         else:
             network = options.network
 
