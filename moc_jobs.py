@@ -109,7 +109,7 @@ class ContractManager(NodeManager):
         is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
         if is_settlement_enabled:
             log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement',
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement1',
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
