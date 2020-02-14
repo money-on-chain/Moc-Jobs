@@ -1,8 +1,42 @@
 {
-  "interval": 180,
-  "timeout_web3": 120,
-  "timeout_request": 10,
-  "partial_execution_steps": 100,
+  "tasks": {
+    "run_settlement": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "liquidation": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "bucket_liquidation": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "daily_inrate_payment": {
+      "interval": 140,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "pay_bitpro_holders": {
+      "interval": 150,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "calculate_bma": {
+      "interval": 130,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout_web3": 30,
+  "gas_price": 60000000,
+  "app_mode": "MoC",
   "networks": {
     "mocGanacheDesktop": {
       "uri": "http://192.168.56.2:8545",
@@ -20,7 +54,7 @@
 
     },
     "mocTestnetAlpha": {
-      "uri": "http://13.52.161.255:4444",
+      "uri": "http://localhost:4444",
       "network_id": 31,
       "accounts": [
         {
@@ -46,6 +80,21 @@
       "addresses": {
         "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
         "MoCState": "0x0adb40132cB0ffcEf6ED81c26A1881e214100555"
+      }
+
+    },
+    "mocRdocTestnet": {
+      "uri": "https://public-node.testnet.rsk.co",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "0xC67D9eE30d2119A384E02de568BE80FE785074Ba",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
+        "MoCState": "0x496eD67F77D044C8d9471fe86085Ccb5DC4d2f63"
       }
 
     },

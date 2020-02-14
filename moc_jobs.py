@@ -8,7 +8,7 @@ import boto3
 import time
 
 # local imports
-from node_manager import NodeManager
+from contracts_manager import NodeManager
 
 import logging
 import logging.config
@@ -35,38 +35,46 @@ log = logging.getLogger('default')
 class ContractManager(NodeManager):
 
     def __init__(self, config_options, network_nm):
-        self.options = config_options
-        self.MoCState = None
-        self.MoC = None
-        super().__init__(options=config_options, network=network_nm)
 
-    def connect_contract(self):
+        self.options = config_options
+        self.contract_MoCState = None
+        self.contract_MoC = None
+
+        super().__init__(options=config_options, network=network_nm)
         self.connect_node()
         self.load_contracts()
 
     def load_contracts(self):
 
+        if self.options['app_mode'] == 'RRC20':
+            folder = 'rrc20'
+        elif self.options['app_mode'] == 'MoC':
+            folder = 'moc'
+        else:
+            raise Exception("Not valid APP Mode")
+
         path_build = self.options['build_dir']
         address_moc_state = self.options['networks'][network]['addresses']['MoCState']
         address_moc = self.options['networks'][network]['addresses']['MoC']
 
-        self.MoCState = self.load_json_contract(os.path.join(path_build, "MoCState.json"),
-                                                deploy_address=address_moc_state)
-        self.MoC = self.load_json_contract(os.path.join(path_build, "MoC.json"),
-                                           deploy_address=address_moc)
+        self.contract_MoCState = self.load_json_contract(os.path.join(path_build, folder, "MoCState.json"),
+                                                         deploy_address=address_moc_state)
+        self.contract_MoC = self.load_json_contract(os.path.join(path_build, folder, "MoC.json"),
+                                                    deploy_address=address_moc)
 
     def contract_liquidation(self):
 
-        self.connect_contract()
+        partial_execution_steps = self.options['tasks']['liquidation']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['liquidation']['wait_timeout']
+        gas_limit = self.options['tasks']['liquidation']['gas_limit']
 
-        partial_execution_steps = self.options['partial_execution_steps']
-
-        log.info("Calling isLiquidationReached ..")
-        is_liquidation_reached = self.MoCState.functions.isLiquidationReached().call()
+        is_liquidation_reached = self.contract_MoCState.functions.isLiquidationReached().call()
         if is_liquidation_reached:
             log.info("Calling evalLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalLiquidation', partial_execution_steps)
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'evalLiquidation',
+                                           partial_execution_steps,
+                                           gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
@@ -75,29 +83,36 @@ class ContractManager(NodeManager):
 
     def contract_bucket_liquidation(self):
 
-        partial_execution_steps = self.options['partial_execution_steps']
+        partial_execution_steps = self.options['tasks']['bucket_liquidation']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
+        gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
-        log.info("Calling isBucketLiquidationReached ..")
-        is_bucket_liquidation_reached = self.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
+        is_bucket_liquidation_reached = self.contract_MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
         if is_bucket_liquidation_reached:
             log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'evalBucketLiquidation', str.encode('X2'))
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'evalBucketLiquidation',
+                                           str.encode('X2'),
+                                           gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
         else:
-            log.info("No liquidation reached!")
+            log.info("No bucket liquidation reached!")
 
     def contract_run_settlement(self):
 
-        partial_execution_steps = self.options['partial_execution_steps']
-        log.info("Calling isSettlementEnabled ..")
-        is_settlement_enabled = self.MoC.functions.isSettlementEnabled().call()
+        partial_execution_steps = self.options['tasks']['run_settlement']['partial_execution_steps']
+        wait_timeout = self.options['tasks']['run_settlement']['wait_timeout']
+        gas_limit = self.options['tasks']['run_settlement']['gas_limit']
+
+        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
         if is_settlement_enabled:
             log.info("Calling runSettlement steps [{0}] ...".format(partial_execution_steps))
-            tx_hash = self.fnx_transaction(self.MoC, 'runSettlement', partial_execution_steps)
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'runSettlement',
+                                           partial_execution_steps,
+                                           gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully runSettlement in Block [{0}]".format(block_number))
@@ -106,12 +121,14 @@ class ContractManager(NodeManager):
 
     def contract_daily_inrate_payment(self):
 
-        log.info("Calling isDailyEnabled ...")
-        is_daily_enabled = self.MoC.functions.isDailyEnabled().call()
+        wait_timeout = self.options['tasks']['daily_inrate_payment']['wait_timeout']
+        gas_limit = self.options['tasks']['daily_inrate_payment']['gas_limit']
+
+        is_daily_enabled = self.contract_MoC.functions.isDailyEnabled().call()
         if is_daily_enabled:
             log.info("Calling dailyInratePayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'dailyInratePayment')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoC, 'dailyInratePayment', gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
@@ -120,12 +137,20 @@ class ContractManager(NodeManager):
 
     def contract_pay_bitpro_holders(self):
 
-        log.info("Calling isBitProInterestEnabled ...")
-        is_bitpro_enabled = self.MoC.functions.isBitProInterestEnabled().call()
+        wait_timeout = self.options['tasks']['pay_bitpro_holders']['wait_timeout']
+        gas_limit = self.options['tasks']['pay_bitpro_holders']['gas_limit']
+
+        if self.options['app_mode'] == 'RRC20':
+            is_bitpro_enabled = self.contract_MoC.functions.isRiskProInterestEnabled().call()
+            contract_function = 'payRiskProHoldersInterestPayment'
+        else:
+            is_bitpro_enabled = self.contract_MoC.functions.isBitProInterestEnabled().call()
+            contract_function = 'payBitProHoldersInterestPayment'
+
         if is_bitpro_enabled:
             log.info("Calling payBitProHoldersInterestPayment ...")
-            tx_hash = self.fnx_transaction(self.MoC, 'payBitProHoldersInterestPayment')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoC, contract_function, gas_limit=gas_limit)
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
@@ -134,12 +159,21 @@ class ContractManager(NodeManager):
 
     def contract_calculate_bma(self):
 
-        log.info("Calling shouldCalculateEma ...")
-        is_ema_enabled = self.MoCState.functions.shouldCalculateEma().call()
+        wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
+        gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
+
+        if self.options['app_mode'] == 'RRC20':
+            contract_function = 'calculateReserveTokenMovingAverage'
+        else:
+            contract_function = 'calculateBitcoinMovingAverage'
+
+        is_ema_enabled = self.contract_MoCState.functions.shouldCalculateEma().call()
         if is_ema_enabled:
             log.info("Calling calculateBitcoinMovingAverage ...")
-            tx_hash = self.fnx_transaction(self.MoCState, 'calculateBitcoinMovingAverage')
-            tx_receipt = self.wait_transaction_receipt(tx_hash)
+            tx_hash = self.fnx_transaction(self.contract_MoCState, contract_function,
+                                           gas_limit=gas_limit)
+
+            tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.debug(tx_receipt)
             block_number = self.block_number
             log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
@@ -175,67 +209,101 @@ class JobsManager:
                     'MetricName': os.environ['MOC_JOBS_NAME'],
                     'Dimensions': [
                         {
-                            'Name': 'MoCJobs',
-                            'Value': 'Status'
+                            'Name': 'JOBS',
+                            'Value': 'Error'
                         },
                     ],
                     'Unit': 'None',
                     'Value': value
                 },
             ],
-            Namespace='MOC/JOBS'
+            Namespace='MOC/EXCEPTIONS'
         )
 
-    def contracts_tasks(self):
-
-        try:
-            self.cm.contract_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
-
-        try:
-            self.cm.contract_bucket_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+    def task_run_settlement(self):
 
         try:
             self.cm.contract_run_settlement()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_liquidation(self):
+
+        try:
+            self.cm.contract_liquidation()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_bucket_liquidation(self):
+
+        try:
+            self.cm.contract_bucket_liquidation()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_daily_inrate_payment(self):
 
         try:
             self.cm.contract_daily_inrate_payment()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_pay_bitpro_holders(self):
 
         try:
             self.cm.contract_pay_bitpro_holders()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_calculate_bma(self):
 
         try:
             self.cm.contract_calculate_bma()
         except Exception as e:
             log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
-
-    def schedule_jobs(self):
-
-        try:
-            self.contracts_tasks()
             self.aws_put_metric_heart_beat(1)
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(0)
 
     def add_jobs(self):
 
-        self.tl._add_job(self.schedule_jobs, datetime.timedelta(seconds=self.options['interval']))
+        log.info("Starting adding jobs...")
+
+        # creating the alarm
+        self.aws_put_metric_heart_beat(0)
+
+        # run_settlement
+        log.info("Jobs add run_settlement")
+        interval = self.options['tasks']['run_settlement']['interval']
+        self.tl._add_job(self.task_run_settlement, datetime.timedelta(seconds=interval))
+
+        # liquidation
+        log.info("Jobs add liquidation")
+        interval = self.options['tasks']['liquidation']['interval']
+        self.tl._add_job(self.task_liquidation, datetime.timedelta(seconds=interval))
+
+        # bucket_liquidation
+        log.info("Jobs add bucket_liquidation")
+        interval = self.options['tasks']['bucket_liquidation']['interval']
+        self.tl._add_job(self.task_bucket_liquidation, datetime.timedelta(seconds=interval))
+
+        # daily_inrate_payment
+        log.info("Jobs add daily_inrate_payment")
+        interval = self.options['tasks']['daily_inrate_payment']['interval']
+        self.tl._add_job(self.task_daily_inrate_payment, datetime.timedelta(seconds=interval))
+
+        # pay_bitpro_holders
+        log.info("Jobs add pay_bitpro_holders")
+        interval = self.options['tasks']['pay_bitpro_holders']['interval']
+        self.tl._add_job(self.task_pay_bitpro_holders, datetime.timedelta(seconds=interval))
+
+        # calculate_bma
+        log.info("Jobs add calculate_bma")
+        interval = self.options['tasks']['calculate_bma']['interval']
+        self.tl._add_job(self.task_calculate_bma, datetime.timedelta(seconds=interval))
 
     def time_loop_start(self):
 
@@ -247,6 +315,7 @@ class JobsManager:
                 time.sleep(1)
             except KeyboardInterrupt:
                 self.tl.stop()
+                log.info("Shutting DOWN! TASKS")
                 break
 
 
@@ -286,7 +355,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocTestnetAlpha'
+            network = 'local'
         else:
             network = options.network
 

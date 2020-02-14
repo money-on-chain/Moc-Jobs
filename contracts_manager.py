@@ -51,6 +51,9 @@ class NodeManager(object):
     @property
     def is_connected(self):
         """ Is connected to the node """
+        if not self.web3:
+            return False
+
         return self.web3.isConnected()
 
     @property
@@ -66,7 +69,7 @@ class NodeManager(object):
     @property
     def minimum_gas_price_fixed(self):
         """ Gas Price """
-        return 60000000
+        return self.options['gas_price']
 
     @property
     def block_number(self):
@@ -116,9 +119,13 @@ class NodeManager(object):
 
         nonce = self.web3.eth.getTransactionCount(from_address)
 
+        gas_price = self.options['gas_price']
+        if gas_price <= 0:
+            gas_price = self.minimum_gas_price
+
         transaction = dict(chainId=self.options['networks'][network]['network_id'],
                            nonce=nonce,
-                           gasPrice=self.minimum_gas_price_fixed,
+                           gasPrice=gas_price,
                            gas=100000,
                            to=to_address,
                            value=value)
@@ -129,7 +136,7 @@ class NodeManager(object):
         return self.web3.eth.sendRawTransaction(
             signed_transaction.rawTransaction)
 
-    def transaction(self, fnc, private_key, value=0, gas_limit=0):
+    def transaction(self, fnc, private_key, value=0, gas_limit=2000000):
 
         network = self.network
         default_account = self.default_account
@@ -145,9 +152,13 @@ class NodeManager(object):
 
         nonce = self.web3.eth.getTransactionCount(from_address)
 
+        gas_price = self.options['gas_price']
+        if gas_price <= 0:
+            gas_price = self.minimum_gas_price
+
         transaction_dict = dict(chainId=self.options['networks'][network]['network_id'],
                                 nonce=nonce,
-                                gasPrice=self.minimum_gas_price_fixed,
+                                gasPrice=gas_price,
                                 gas=gas_limit,
                                 value=value)
 
@@ -161,7 +172,7 @@ class NodeManager(object):
 
         return transaction_hash.hex()
 
-    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=5800000):
+    def fnx_transaction(self, sc, function_, *tx_args, tx_params=None, gas_limit=3500000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
@@ -201,9 +212,13 @@ class NodeManager(object):
             if 'value' in tx_params:
                 tx_value = tx_params['value']
 
+        gas_price = self.options['gas_price']
+        if gas_price <= 0:
+            gas_price = self.minimum_gas_price
+
         transaction_dict = {'chainId': self.options['networks'][network]['network_id'],
                             'nonce': nonce,
-                            'gasPrice': self.minimum_gas_price_fixed,
+                            'gasPrice': gas_price,
                             'gas': gas_limit,
                             'value': tx_value}
 
@@ -217,7 +232,7 @@ class NodeManager(object):
 
         return transaction_hash
 
-    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=5800000):
+    def fnx_constructor(self, sc, *tx_args, tx_params=None, gas_limit=3500000):
         """Contract agnostic transaction function with extras"""
 
         network = self.network
@@ -257,9 +272,13 @@ class NodeManager(object):
             if 'value' in tx_params:
                 tx_value = tx_params['value']
 
+        gas_price = self.options['gas_price']
+        if gas_price <= 0:
+            gas_price = self.minimum_gas_price
+
         transaction_dict = {'chainId': self.options['networks'][network]['network_id'],
                             'nonce': nonce,
-                            'gasPrice': self.minimum_gas_price_fixed,
+                            'gasPrice': gas_price,
                             'gas': gas_limit,
                             'value': tx_value}
 
