@@ -98,6 +98,21 @@
       }
 
     },
+    "mocRdocMainnet": {
+      "uri": "https://public-node.rsk.co",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "",
+        "MoCState": ""
+      }
+
+    },
     "mocMainnet2": {
       "uri": "https://public-node.rsk.co",
       "network_id": 30,
