@@ -119,20 +119,23 @@ check if bucket liquidation is reached, if yes then run bucket liquidation.
 ```
 def contract_bucket_liquidation(self):
 
-    partial_execution_steps = self.options['partial_execution_steps']
+    partial_execution_steps = self.options['tasks']['bucket_liquidation']['partial_execution_steps']
+    wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
+    gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
-    log.info("Calling isBucketLiquidationReached ..")
-    is_bucket_liquidation_reached = self.cm.MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
-    if is_bucket_liquidation_reached:
+    is_bucket_liquidation_reached = self.contract_MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
+    is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
+    if is_bucket_liquidation_reached and not is_settlement_enabled:
         log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
-        tx_hash = self.nm.fnx_transaction(self.cm.MoC, 'evalBucketLiquidation', str.encode('X2'))
-        tx_receipt = self.nm.wait_transaction_receipt(tx_hash)
-        log.debug(tx_receipt)
-        block_number = self.nm.block_number
+        tx_hash = self.fnx_transaction(self.contract_MoC, 'evalBucketLiquidation',
+                                       str.encode('X2'),
+                                       gas_limit=gas_limit)
+        tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
+        log.info(tx_receipt)
+        block_number = self.block_number
         log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
     else:
-        log.info("No liquidation reached!")
-
+        log.info("No bucket liquidation reached!")
 ```
 
 **Contract code:**

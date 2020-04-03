@@ -115,8 +115,13 @@ class ContractManager(NodeManager):
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
             log.info(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully runSettlement in Block [{0}]".format(block_number))
+            #block_number = self.block_number
+            #block_number = tx_receipt['blockNumber']
+            #gasUsed = tx_receipt['gasUsed']
+            log.info("Successfully runSettlement in Block [{0}] Hash: [{1}] Gas used: [{2}]".format(
+                tx_receipt['blockNumber'],
+                tx_receipt['transactionHash'],
+                tx_receipt['gasUsed']))
         else:
             log.info("No settlement reached!")
 
