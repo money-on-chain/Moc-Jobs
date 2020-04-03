@@ -1,35 +1,35 @@
 {
   "tasks": {
     "run_settlement": {
-      "interval": 30,
+      "interval": 15,
       "wait_timeout": 240,
-      "partial_execution_steps": 20,
+      "partial_execution_steps": 10,
       "gas_limit": 3500000
     },
     "liquidation": {
-      "interval": 30,
+      "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
     },
     "bucket_liquidation": {
-      "interval": 30,
+      "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 140,
+      "interval": 60,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 150,
+      "interval": 65,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 130,
+      "interval": 72,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }
@@ -95,6 +95,21 @@
       "addresses": {
         "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
         "MoCState": "0x496eD67F77D044C8d9471fe86085Ccb5DC4d2f63"
+      }
+
+    },
+    "mocRdocMainnet": {
+      "uri": "https://public-node.rsk.co",
+      "network_id": 31,
+      "accounts": [
+        {
+          "address": "",
+          "private_key":  ""
+        }
+      ],
+      "addresses": {
+        "MoC": "",
+        "MoCState": ""
       }
 
     },

@@ -2,6 +2,7 @@ import os
 from optparse import OptionParser
 import datetime
 import json
+from web3 import Web3
 
 from timeloop import Timeloop
 import boto3
@@ -75,28 +76,36 @@ class ContractManager(NodeManager):
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
+
+            log.info("Successfully forced Liquidation in Block [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                tx_receipt['blockNumber'],
+                Web3.toHex(tx_receipt['transactionHash']),
+                tx_receipt['gasUsed'],
+                tx_receipt['from']))
+
         else:
             log.info("No liquidation reached!")
 
     def contract_bucket_liquidation(self):
 
-        partial_execution_steps = self.options['tasks']['bucket_liquidation']['partial_execution_steps']
         wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
         gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
         is_bucket_liquidation_reached = self.contract_MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
-        if is_bucket_liquidation_reached:
-            log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
+        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
+        if is_bucket_liquidation_reached and not is_settlement_enabled:
+            log.info("Calling evalBucketLiquidation...")
             tx_hash = self.fnx_transaction(self.contract_MoC, 'evalBucketLiquidation',
                                            str.encode('X2'),
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
+
+            log.info("Successfully Bucket X2 Liquidation in Block [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                tx_receipt['blockNumber'],
+                Web3.toHex(tx_receipt['transactionHash']),
+                tx_receipt['gasUsed'],
+                tx_receipt['from']))
+
         else:
             log.info("No bucket liquidation reached!")
 
@@ -113,9 +122,12 @@ class ContractManager(NodeManager):
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully runSettlement in Block [{0}]".format(block_number))
+
+            log.info("Successfully runSettlement in Block [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                tx_receipt['blockNumber'],
+                Web3.toHex(tx_receipt['transactionHash']),
+                tx_receipt['gasUsed'],
+                tx_receipt['from']))
         else:
             log.info("No settlement reached!")
 
@@ -129,9 +141,12 @@ class ContractManager(NodeManager):
             log.info("Calling dailyInratePayment ...")
             tx_hash = self.fnx_transaction(self.contract_MoC, 'dailyInratePayment', gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
+
+            log.info("Successfully dailyInratePayment in Block  [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                tx_receipt['blockNumber'],
+                Web3.toHex(tx_receipt['transactionHash']),
+                tx_receipt['gasUsed'],
+                tx_receipt['from']))
         else:
             log.info("No isDailyEnabled reached!")
 
@@ -151,9 +166,13 @@ class ContractManager(NodeManager):
             log.info("Calling payBitProHoldersInterestPayment ...")
             tx_hash = self.fnx_transaction(self.contract_MoC, contract_function, gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
+
+            log.info("Successfully payBitProHoldersInterestPayment in Block [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                tx_receipt['blockNumber'],
+                Web3.toHex(tx_receipt['transactionHash']),
+                tx_receipt['gasUsed'],
+                tx_receipt['from']))
+
         else:
             log.info("No isBitProInterestEnabled reached!")
 
@@ -174,9 +193,14 @@ class ContractManager(NodeManager):
                                            gas_limit=gas_limit)
 
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
-            block_number = self.block_number
-            log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
+
+            log.info(
+                "Successfully calculateBitcoinMovingAverage in Block [{0}] Hash: [{1}] Gas used: [{2}] From: [{3}]".format(
+                    tx_receipt['blockNumber'],
+                    Web3.toHex(tx_receipt['transactionHash']),
+                    tx_receipt['gasUsed'],
+                    tx_receipt['from']))
+
         else:
             log.info("No shouldCalculateEma reached!")
 
