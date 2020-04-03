@@ -88,7 +88,8 @@ class ContractManager(NodeManager):
         gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
         is_bucket_liquidation_reached = self.contract_MoC.functions.isBucketLiquidationReached(str.encode('X2')).call()
-        if is_bucket_liquidation_reached:
+        is_settlement_enabled = self.contract_MoC.functions.isSettlementEnabled().call()
+        if is_bucket_liquidation_reached and not is_settlement_enabled:
             log.info("Calling evalBucketLiquidation steps [{0}] ...".format(partial_execution_steps))
             tx_hash = self.fnx_transaction(self.contract_MoC, 'evalBucketLiquidation',
                                            str.encode('X2'),
