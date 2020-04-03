@@ -75,7 +75,7 @@ class ContractManager(NodeManager):
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully forced Liquidation in Block [{0}]".format(block_number))
         else:
@@ -95,7 +95,7 @@ class ContractManager(NodeManager):
                                            str.encode('X2'),
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully Bucket X2 Liquidation in Block [{0}]".format(block_number))
         else:
@@ -114,7 +114,7 @@ class ContractManager(NodeManager):
                                            partial_execution_steps,
                                            gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully runSettlement in Block [{0}]".format(block_number))
         else:
@@ -130,7 +130,7 @@ class ContractManager(NodeManager):
             log.info("Calling dailyInratePayment ...")
             tx_hash = self.fnx_transaction(self.contract_MoC, 'dailyInratePayment', gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully dailyInratePayment in Block [{0}]".format(block_number))
         else:
@@ -152,7 +152,7 @@ class ContractManager(NodeManager):
             log.info("Calling payBitProHoldersInterestPayment ...")
             tx_hash = self.fnx_transaction(self.contract_MoC, contract_function, gas_limit=gas_limit)
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully payBitProHoldersInterestPayment in Block [{0}]".format(block_number))
         else:
@@ -175,7 +175,7 @@ class ContractManager(NodeManager):
                                            gas_limit=gas_limit)
 
             tx_receipt = self.wait_transaction_receipt(tx_hash, timeout=wait_timeout)
-            log.debug(tx_receipt)
+            log.info(tx_receipt)
             block_number = self.block_number
             log.info("Successfully calculateBitcoinMovingAverage in Block [{0}]".format(block_number))
         else:
