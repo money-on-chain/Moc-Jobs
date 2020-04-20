@@ -1,6 +1,7 @@
-# Cron Jobs
+# Moc Jobs
 
-Periodic tasks that runs differents jobs, that call the contracts and asks if the are ready to execute it. This jobs 
+This is a backend executor jobs. Periodic tasks that runs differents jobs, 
+that call the contracts and asks if the are ready to execute it. This jobs 
 run async of the app, and call directly to the contract througth node. 
 
 ### Currents jobs
@@ -12,9 +13,6 @@ run async of the app, and call directly to the contract througth node.
  5. Contract pay bitpro holders
  6. Contract calculate EMA
  
-This jobs run threaded, if one fail continue with next one and in this order.
-
-**time every tick:** 10 min
  
 ### Usage
 
@@ -63,6 +61,8 @@ moc_jobs
   
  
 ### Jobs explain
+
+Some of this tasks you can run directly from the app in https://alpha.moneyonchain.com/advanced
  
 #### 1. Contract liquidation
 
