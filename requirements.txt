@@ -1,4 +1,4 @@
 web3
 timeloop
 boto3
-moneyonchain>=0.0.9
+moneyonchain>=0.0.10
