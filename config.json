@@ -54,7 +54,7 @@
       ],
       "addresses": {
         "governor": "0x9258531274B945eB628656F4b30e8216938A619C",
-        "oracle": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
+        "MoCMedianizer": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
         "upgradeDelegator": "0x00a47D7d7B9bD22e0A862908EC493bDE893f627B",
         "MoC": "0xE02f9AE8fe5Da307b6C7cd928AEa380392f5a395",
         "MoCInrate": "0xe1DD7DB674d8F218CF7bA0BD8C5Ea17C06b4478d",
@@ -83,7 +83,7 @@
       ],
       "addresses": {
         "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
-        "oracle": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
+        "MoCMedianizer": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
         "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
         "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
         "MoCInrate": "0x76790f846FAAf44cf1B2D717d0A6c5f6f5152B60",
@@ -117,7 +117,7 @@
       ],
       "addresses": {
         "governor": "0xC61F0392d5170214b5D93C0BC4c4354163aBC1f7",
-        "oracle": "0x7B19bb8e6c5188eC483b784d6fB5d807a77b21bF",
+        "MoCMedianizer": "0x7B19bb8e6c5188eC483b784d6fB5d807a77b21bF",
         "upgradeDelegator": "0x5cE577f6Ec969CE9a282838D350206C52A6F338C",
         "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
         "MoCInrate": "0xc0f9B54c41E3d0587Ce0F7540738d8d649b0A3F3",
@@ -150,7 +150,7 @@
       ],
       "addresses": {
         "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
-        "oracle": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
+        "MoCMedianizer": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
         "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
         "MoC": "0x4512f4C1d984bbf8B7f7404EddFb1881cFA79EfD",
         "MoCInrate": "0x2B57fb820601655ca7Da16a5134db4780Aa93E74",
@@ -180,7 +180,7 @@
       ],
       "addresses": {
         "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
-        "oracle": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
+        "MoCMedianizer": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
         "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
         "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
         "MoCInrate": "0x4C54053845F4f219AddB43ef3A7d4478E89a2A47",
@@ -210,7 +210,7 @@
       ],
       "addresses": {
         "governor": "0xC61F0392d5170214b5D93C0BC4c4354163aBC1f7",
-        "oracle": "0x504EfCadFB020d6bBaeC8a5c5BB21453719d0E00",
+        "MoCMedianizer": "0x504EfCadFB020d6bBaeC8a5c5BB21453719d0E00",
         "upgradeDelegator": "0x5cE577f6Ec969CE9a282838D350206C52A6F338C",
         "MoC": "0xCfF3fcaeC2352C672C38d77cb1a064B7D50ce7e1",
         "MoCInrate": "0x1DaB07c4FD07d6eE1359a5198ACa2DEe64F371f3",
