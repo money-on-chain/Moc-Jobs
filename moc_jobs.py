@@ -9,8 +9,8 @@ import boto3
 import time
 
 from moneyonchain.manager import ConnectionManager
-from moneyonchain.rdoc import RDOCMoC
-from moneyonchain.moc import MoC
+from moneyonchain.rdoc import RDOCMoC, RDOCMoCMedianizer
+from moneyonchain.moc import MoC, MoCMedianizer
 
 import logging
 import logging.config
@@ -34,8 +34,10 @@ class JobsManager:
 
         if self.app_mode == 'RRC20':
             self.contract_MoC = RDOCMoC(self.connection_manager)
+            self.contract_MoCMedianizer = RDOCMoCMedianizer(self.connection_manager)
         elif self.app_mode == 'MoC':
             self.contract_MoC = MoC(self.connection_manager)
+            self.contract_MoCMedianizer = MoCMedianizer(self.connection_manager)
         else:
             raise Exception("Not valid APP Mode")
 
@@ -138,6 +140,19 @@ class JobsManager:
         if not tx_hash:
             log.info("NO: calculateBitcoinMovingAverage!")
 
+    def contract_oracle_poke(self):
+
+        wait_timeout = self.options['tasks']['oracle_poke']['wait_timeout']
+        gas_limit = self.options['tasks']['oracle_poke']['gas_limit']
+
+        tx_hash = None
+        tx_receipt = None
+        if not self.contract_MoCMedianizer.compute()[1] and self.contract_MoCMedianizer.peek()[1]:
+            tx_hash, tx_receipt = self.contract_MoCMedianizer.poke(gas_limit=gas_limit,
+                                                                   wait_timeout=wait_timeout)
+        else:
+            log.info("NO: oracle Poke!")
+
     def task_run_settlement(self):
 
         try:
@@ -186,6 +201,14 @@ class JobsManager:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(1)
 
+    def task_oracle_poke(self):
+
+        try:
+            self.contract_oracle_poke()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(1)
+
     def add_jobs(self):
 
         log.info("Starting adding jobs...")
@@ -222,6 +245,11 @@ class JobsManager:
         log.info("Jobs add calculate_bma")
         interval = self.options['tasks']['calculate_bma']['interval']
         self.tl._add_job(self.task_calculate_bma, datetime.timedelta(seconds=interval))
+
+        # Oracle Poke
+        log.info("Jobs add oracle poke")
+        interval = self.options['tasks']['oracle_poke']['interval']
+        self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
 
     def time_loop_start(self):
 

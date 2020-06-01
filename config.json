@@ -32,6 +32,11 @@
       "interval": 72,
       "wait_timeout": 240,
       "gas_limit": 2000000
+    },
+    "oracle_poke": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
     }
   },
   "timeout": 60,
