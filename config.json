@@ -40,7 +40,7 @@
     }
   },
   "timeout": 60,
-  "gas_price": 60000000,
+  "gas_price": 64000000,
   "networks": {
     "mocTestnetAlpha": {
       "app_mode": "MoC",
