@@ -1,0 +1,47 @@
+{
+  "tasks": {
+    "oracle_poke": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout": 30,
+  "gas_price": 65000000,
+  "networks": {
+    "rdocTestnet": {
+      "app_mode": "RRC20",
+      "uri": ["http://10.0.0.73:4444"],
+      "chain_id": 31,
+      "accounts": [
+        {
+          "address": "0xC67D9eE30d2119A384E02de568BE80FE785074Ba",
+          "private_key": ""
+        }
+      ],
+      "addresses": {
+        "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
+        "oracle": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
+        "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
+        "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
+        "MoCInrate": "0x4C54053845F4f219AddB43ef3A7d4478E89a2A47",
+        "MoCState": "0x496eD67F77D044C8d9471fe86085Ccb5DC4d2f63",
+        "MoCConverter": "0x172e0a60579FD2eA0EdfD2155287dA93eA77dD7E",
+        "MoCExchange": "0x7d5804E33B015b43159e61188526C93cfdA746f6",
+        "MoCConnector": "0x52E1b00d9f75aE6ecCcC0c9Ef3087dF7F0BaB15E",
+        "MoCHelperLib": "0xB44721cD90E9063953831685aB0372A98ECC5EF4",
+        "MoCBProxManager": "0xDd67D17eDABF2b320A18C00753C4D1c1008Abd73",
+        "MoCSettlement": "0x163D79dB568417983Aa2D64AA6310Bed0f23Ab61",
+        "MoCBurnout": "0x0E4010aF12E09CD7aa758B6ebE8BF1949c5174Ca",
+        "BProToken": "0x23A1aA7b11e68beBE560a36beC04D1f79357f28d",
+        "DoCToken": "0xC3De9F38581f83e281f260d0DdbaAc0e102ff9F8",
+        "ReserveToken": "0x19F64674D8A5B4E652319F5e239eFd3bc969A1fE",
+        "MoCMedianizer": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
+        "PriceFeed": "0x462D7082F3671a3BE160638Be3f8C23Ca354F48A"
+      }
+
+    }
+
+  }
+
+}

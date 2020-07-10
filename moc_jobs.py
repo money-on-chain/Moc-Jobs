@@ -217,39 +217,46 @@ class JobsManager:
         self.aws_put_metric_heart_beat(0)
 
         # run_settlement
-        log.info("Jobs add run_settlement")
-        interval = self.options['tasks']['run_settlement']['interval']
-        self.tl._add_job(self.task_run_settlement, datetime.timedelta(seconds=interval))
+        if 'run_settlement' in self.options['tasks']:
+            log.info("Jobs add run_settlement")
+            interval = self.options['tasks']['run_settlement']['interval']
+            self.tl._add_job(self.task_run_settlement, datetime.timedelta(seconds=interval))
 
         # liquidation
-        log.info("Jobs add liquidation")
-        interval = self.options['tasks']['liquidation']['interval']
-        self.tl._add_job(self.task_liquidation, datetime.timedelta(seconds=interval))
+        if 'liquidation' in self.options['tasks']:
+            log.info("Jobs add liquidation")
+            interval = self.options['tasks']['liquidation']['interval']
+            self.tl._add_job(self.task_liquidation, datetime.timedelta(seconds=interval))
 
         # bucket_liquidation
-        log.info("Jobs add bucket_liquidation")
-        interval = self.options['tasks']['bucket_liquidation']['interval']
-        self.tl._add_job(self.task_bucket_liquidation, datetime.timedelta(seconds=interval))
+        if 'bucket_liquidation' in self.options['tasks']:
+            log.info("Jobs add bucket_liquidation")
+            interval = self.options['tasks']['bucket_liquidation']['interval']
+            self.tl._add_job(self.task_bucket_liquidation, datetime.timedelta(seconds=interval))
 
         # daily_inrate_payment
-        log.info("Jobs add daily_inrate_payment")
-        interval = self.options['tasks']['daily_inrate_payment']['interval']
-        self.tl._add_job(self.task_daily_inrate_payment, datetime.timedelta(seconds=interval))
+        if 'daily_inrate_payment' in self.options['tasks']:
+            log.info("Jobs add daily_inrate_payment")
+            interval = self.options['tasks']['daily_inrate_payment']['interval']
+            self.tl._add_job(self.task_daily_inrate_payment, datetime.timedelta(seconds=interval))
 
         # pay_bitpro_holders
-        log.info("Jobs add pay_bitpro_holders")
-        interval = self.options['tasks']['pay_bitpro_holders']['interval']
-        self.tl._add_job(self.task_pay_bitpro_holders, datetime.timedelta(seconds=interval))
+        if 'pay_bitpro_holders' in self.options['tasks']:
+            log.info("Jobs add pay_bitpro_holders")
+            interval = self.options['tasks']['pay_bitpro_holders']['interval']
+            self.tl._add_job(self.task_pay_bitpro_holders, datetime.timedelta(seconds=interval))
 
         # calculate_bma
-        log.info("Jobs add calculate_bma")
-        interval = self.options['tasks']['calculate_bma']['interval']
-        self.tl._add_job(self.task_calculate_bma, datetime.timedelta(seconds=interval))
+        if 'calculate_bma' in self.options['tasks']:
+            log.info("Jobs add calculate_bma")
+            interval = self.options['tasks']['calculate_bma']['interval']
+            self.tl._add_job(self.task_calculate_bma, datetime.timedelta(seconds=interval))
 
         # Oracle Poke
-        log.info("Jobs add oracle poke")
-        interval = self.options['tasks']['oracle_poke']['interval']
-        self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
+        if 'oracle_poke' in self.options['tasks']:
+            log.info("Jobs add oracle poke")
+            interval = self.options['tasks']['oracle_poke']['interval']
+            self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
 
     def time_loop_start(self):
 
@@ -299,7 +306,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'rdocTestnetAlpha'
+            network = 'rdocTestnet'
         else:
             network = options.network
 

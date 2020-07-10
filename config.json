@@ -10,7 +10,7 @@
       "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 25,
-      "gas_limit": 3500000
+      "gas_limit": 4500000
     },
     "bucket_liquidation": {
       "interval": 20,

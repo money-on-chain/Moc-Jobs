@@ -1,0 +1,45 @@
+{
+  "tasks": {
+    "oracle_poke": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout": 30,
+  "gas_price": 60000000,
+  "networks": {
+    "mocMainnet2": {
+      "app_mode": "MoC",
+      "uri": ["http://10.0.0.10:4444"],
+      "chain_id": 30,
+      "accounts": [
+        {
+          "address": "0xEA14c08764c9e5F212c916E11a5c47Eaf92571e4",
+          "private_key": ""
+        }
+      ],
+      "addresses": {
+        "governor": "0xC61F0392d5170214b5D93C0BC4c4354163aBC1f7",
+        "oracle": "0x7B19bb8e6c5188eC483b784d6fB5d807a77b21bF",
+        "MoCMedianizer": "0x7B19bb8e6c5188eC483b784d6fB5d807a77b21bF",
+        "upgradeDelegator": "0x5cE577f6Ec969CE9a282838D350206C52A6F338C",
+        "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
+        "MoCInrate": "0xc0f9B54c41E3d0587Ce0F7540738d8d649b0A3F3",
+        "MoCState": "0xb9C42EFc8ec54490a37cA91c423F7285Fa01e257",
+        "MoCConverter": "0x0B7507032f140f5Ae5C0f1dA2251a0cd82c82296",
+        "MoCExchange": "0x6aCb83bB0281FB847b43cf7dd5e2766BFDF49038",
+        "MoCConnector": "0xcE2A128cC73e5d98355aAfb2595647F2D3171Faa",
+        "MoCHelperLib": "0x4E1894debD18b470706A20aC8FE0cc2D9e904218",
+        "MoCBProxManager": "0xC4fBFa2270Be87FEe5BC38f7a1Bb6A9415103b6c",
+        "MoCSettlement": "0x609dF03D8a85eAffE376189CA7834D4C35e32F22",
+        "MoCBurnout": "0xE69fB8C8fE9dCa08350AF5C47508f3E688D0CDd1",
+        "FeedFactory": "0xf0abcc4Cb0B46D9858704eb0C72d9735986B09cF",
+        "BProToken": "0x440CD83C160De5C96Ddb20246815eA44C7aBBCa8",
+        "DoCToken": "0xe700691dA7b9851F2F35f8b8182c69c53CcaD9Db"
+      }
+    }
+
+  }
+
+}
