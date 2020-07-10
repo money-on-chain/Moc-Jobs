@@ -1,0 +1,79 @@
+{
+  "tasks": {
+    "run_settlement": {
+      "interval": 15,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "liquidation": {
+      "interval": 20,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "bucket_liquidation": {
+      "interval": 30,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "daily_inrate_payment": {
+      "interval": 240,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "pay_bitpro_holders": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "calculate_bma": {
+      "interval": 72,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "oracle_poke": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout": 30,
+  "gas_price": 65000000,
+  "networks": {
+    "rdocTestnetAlpha": {
+      "app_mode": "RRC20",
+      "uri": ["http://107.155.119.46:4444"],
+      "chain_id": 31,
+      "accounts": [
+        {
+          "address": "0xA8f94D08D3D9C045fe0B86A953dF39B14206153c",
+          "private_key": ""
+        }
+      ],
+      "addresses": {
+        "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
+        "oracle": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc",
+        "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
+        "MoC": "0x4512f4C1d984bbf8B7f7404EddFb1881cFA79EfD",
+        "MoCInrate": "0x2B57fb820601655ca7Da16a5134db4780Aa93E74",
+        "MoCState": "0xB80C23576053A1a5278C1a43DC8471F432f77245",
+        "MoCConverter": "0x71e3b519Ce8a1046B275eb53F2151688474D3204",
+        "MoCExchange": "0x9608F72B879CfbF6c6B9eD4EE768d339140B8074",
+        "MoCConnector": "0x6b1eF14FD679339B5D54d4b8b997611dA1e26800",
+        "MoCHelperLib": "0xabe1A7b54CF489eCD3fD5844F8aBFdF7e4DF5c74",
+        "MoCBProxManager": "0xBB2d536d3fCa262516e950984085C745E5EE824e",
+        "MoCSettlement": "0xF7a2835aF44DF2b831291D7229DcD13D32E57d4A",
+        "MoCBurnout": "0xb8AF52Fd2aDB11cdB55EF9eE0C65204AD59fEA6b",
+        "BProToken": "0xf947fe5190D33D812F74B4EEA31509D9D94F149e",
+        "DoCToken": "0x7fb303D9806A72563C46aad8d874b301419c374b",
+        "ReserveToken": "0x19F64674D8A5B4E652319F5e239eFd3bc969A1fE",
+        "MoCMedianizer": "0x9d4b2c05818A0086e641437fcb64ab6098c7BbEc"
+      }
+
+    }
+
+  }
+
+}
