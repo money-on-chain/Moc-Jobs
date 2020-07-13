@@ -150,6 +150,8 @@ class JobsManager:
         if not self.contract_MoCMedianizer.compute()[1] and self.contract_MoCMedianizer.peek()[1]:
             tx_hash, tx_receipt = self.contract_MoCMedianizer.poke(gas_limit=gas_limit,
                                                                    wait_timeout=wait_timeout)
+            log.error("[POKE] Not valid price! Disabling MOC Price!")
+            self.aws_put_metric_heart_beat(1)
         else:
             log.info("NO: oracle Poke!")
 
@@ -306,7 +308,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'rdocTestnet'
+            network = 'mocTestnet'
         else:
             network = options.network
 
