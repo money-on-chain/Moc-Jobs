@@ -25,6 +25,7 @@ COPY moc_jobs.py ./
 
 #COPY config.json ./
 
+ENV AWS_DEFAULT_REGION=us-west-1
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
 CMD ["python", "./moc_jobs.py"]
