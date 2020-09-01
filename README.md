@@ -90,7 +90,7 @@ sudo su builder -s /bin/bash
 ### **Building image** 
 
 ```
-./build.sh -e <environment> -b develop
+./build.sh -e <environment>
 ```
 
  Where environment could be

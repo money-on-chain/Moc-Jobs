@@ -31,10 +31,10 @@ while getopts ":e:" o; do
                     ;;
                 ec2_alphatestnet)
                     ENV=$e
-                    ;;  
+                    ;;
                 ec2_testnet)
                     ENV=$e
-                    ;; 
+                    ;;
                 ec2_mainnet)
                     ENV=$e
                     ;;
@@ -46,7 +46,7 @@ while getopts ":e:" o; do
                     ;;
                 ec2_rdoc_mainnet)
                     ENV=$e
-                    ;; 
+                    ;;
                 *)
                     usage
                     ;;
