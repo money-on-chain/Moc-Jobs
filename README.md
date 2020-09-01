@@ -95,12 +95,12 @@ sudo su builder -s /bin/bash
 
  Where environment could be
 
-* moc-alphatestnet: alpha-testnet.moneyonchain.com
-* moc-testnet: moc-testnet.moneyonchain.com
-* moc-mainnet: alpha.moneyonchain.com
-* rdoc-mainnet: rif.moneyonchain.com
-* rdoc-testnet: rif-testnet.moneyonchain.com
-* rdoc-alpha-testnet: rif-alpha.moneyonchain.com
+* ec2_alphatestnet: alpha-testnet.moneyonchain.com
+* ec2_testnet: moc-testnet.moneyonchain.com
+* ec2_mainnet: alpha.moneyonchain.com
+* ec2_rdoc_mainnet: rif.moneyonchain.com
+* ec2_rdoc_testnet: rif-testnet.moneyonchain.com
+* ec2_rdoc_alphatestnet: rif-alpha.moneyonchain.com
 
 
 This command will take the ABIs (builds) from the version folder corresponding to the implementation.
