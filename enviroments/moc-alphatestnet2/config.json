@@ -1,0 +1,58 @@
+{
+  "tasks": {
+    "run_settlement": {
+      "interval": 15,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "liquidation": {
+      "interval": 20,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "bucket_liquidation": {
+      "interval": 20,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "daily_inrate_payment": {
+      "interval": 240,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "pay_bitpro_holders": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "calculate_bma": {
+      "interval": 72,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout": 60,
+  "gas_price": 65000000,
+  "networks": {
+    "mocTestnetAlpha": {
+      "app_mode": "MoC",
+      "uri": ["http://moc-rsk-node-testnet.moneyonchain.com:4454"],
+      "chain_id": 31,
+      "accounts": [
+        {
+          "address": "0xB7d4B3c37d17D66B88da41e8A87561323A6DBDA0",
+          "private_key": ""
+        }
+      ],
+      "addresses": {
+        "MoC": "0x01AD6f8E884ed4DDC089fA3efC075E9ba45C9039"
+      }
+
+    }
+
+  }
+
+}
