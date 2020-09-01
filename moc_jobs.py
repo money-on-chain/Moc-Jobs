@@ -2,7 +2,6 @@ import os
 from optparse import OptionParser
 import datetime
 import json
-from web3 import Web3
 
 from timeloop import Timeloop
 import boto3
@@ -33,11 +32,15 @@ class JobsManager:
         self.app_mode = self.options['networks'][network]['app_mode']
 
         if self.app_mode == 'RRC20':
-            self.contract_MoC = RDOCMoC(self.connection_manager)
-            self.contract_MoCMedianizer = RDOCMoCMedianizer(self.connection_manager)
+            self.contract_MoC = RDOCMoC(self.connection_manager, contracts_discovery=True)
+            self.contract_MoCState = self.contract_MoC.sc_moc_state
+            self.contract_MoCMedianizer = RDOCMoCMedianizer(self.connection_manager,
+                                                            contract_address=self.contract_MoCState.price_provider())
         elif self.app_mode == 'MoC':
-            self.contract_MoC = MoC(self.connection_manager)
-            self.contract_MoCMedianizer = MoCMedianizer(self.connection_manager)
+            self.contract_MoC = MoC(self.connection_manager, contracts_discovery=True)
+            self.contract_MoCState = self.contract_MoC.sc_moc_state
+            self.contract_MoCMedianizer = MoCMedianizer(self.connection_manager,
+                                                        contract_address=self.contract_MoCState.price_provider())
         else:
             raise Exception("Not valid APP Mode")
 
@@ -308,7 +311,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocTestnet'
+            network = 'mocTestnetAlpha'
         else:
             network = options.network
 
