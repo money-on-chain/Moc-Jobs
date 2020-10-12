@@ -9,19 +9,19 @@
   "timeout": 30,
   "gas_price": 68000000,
   "networks": {
-    "rdocTestnet": {
-      "app_mode": "RRC20",
-      "uri": ["https://public-node.testnet.rsk.co"],
+    "mocTestnet": {
+      "app_mode": "MoC",
+      "uri": ["http://moc-rsk-node-testnet.moneyonchain.com:4454"],
       "chain_id": 31,
       "accounts": [
         {
-          "address": "0xC67D9eE30d2119A384E02de568BE80FE785074Ba",
+          "address": "0xE2929d888015EB568AFfa06aaB946923a7236Ad9",
           "private_key": ""
         }
       ],
       "addresses": {
-        "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
-        "CommissionSplitter": "0x5aF95c49461ef2bE429CD84aDe50867ff5A20fB6"
+        "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
+        "CommissionSplitter": "0xC003A2e210FA3E2fBdDcf564Fe0E1bbCd93E3B40"
       }
 
     }

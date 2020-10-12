@@ -13,13 +13,13 @@
       "gas_limit": 3500000
     },
     "bucket_liquidation": {
-      "interval": 30,
+      "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 240,
+      "interval": 60,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
@@ -40,23 +40,22 @@
     }
   },
   "timeout": 30,
-  "gas_price": 68000000,
+  "gas_price": 60000000,
   "networks": {
-    "rdocTestnetAlpha": {
-      "app_mode": "RRC20",
-      "uri": ["https://public-node.testnet.rsk.co"],
-      "chain_id": 31,
+    "mocMainnet2": {
+      "app_mode": "MoC",
+      "uri": ["http://moc-rsk-node-mainnet.moneyonchain.com:4454"],
+      "chain_id": 30,
       "accounts": [
         {
-          "address": "0xA8f94D08D3D9C045fe0B86A953dF39B14206153c",
+          "address": "0xEA14c08764c9e5F212c916E11a5c47Eaf92571e4",
           "private_key": ""
         }
       ],
       "addresses": {
-        "MoC": "0x4512f4C1d984bbf8B7f7404EddFb1881cFA79EfD",
-        "CommissionSplitter": "0xE79fE1d8D321d01aA973E319112Fb98eA319B7a1"
+        "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
+        "CommissionSplitter": "0xa5467535851263122ef1476e24C529CFc6CFc086"
       }
-
     }
 
   }

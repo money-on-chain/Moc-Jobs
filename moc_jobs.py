@@ -6,10 +6,12 @@ import json
 from timeloop import Timeloop
 import boto3
 import time
+from web3 import Web3
 
 from moneyonchain.manager import ConnectionManager
 from moneyonchain.rdoc import RDOCMoC, RDOCMoCMedianizer
 from moneyonchain.moc import MoC, MoCMedianizer
+from moneyonchain.commission import CommissionSplitter, RDOCCommissionSplitter
 
 import logging
 import logging.config
@@ -36,11 +38,13 @@ class JobsManager:
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = RDOCMoCMedianizer(self.connection_manager,
                                                             contract_address=self.contract_MoCState.price_provider())
+            self.contract_splitter = RDOCCommissionSplitter(self.connection_manager)
         elif self.app_mode == 'MoC':
             self.contract_MoC = MoC(self.connection_manager, contracts_discovery=True)
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = MoCMedianizer(self.connection_manager,
                                                         contract_address=self.contract_MoCState.price_provider())
+            self.contract_splitter = CommissionSplitter(self.connection_manager)
         else:
             raise Exception("Not valid APP Mode")
 
@@ -121,6 +125,81 @@ class JobsManager:
         if not tx_hash:
             log.info("NO: dailyInratePayment!")
 
+    def contract_splitter_split(self):
+
+        wait_timeout = self.options['tasks']['splitter_split']['wait_timeout']
+        gas_limit = self.options['tasks']['splitter_split']['gas_limit']
+
+        log.info("Calling Splitter ...")
+
+        info_dict = dict()
+        info_dict['before'] = dict()
+        info_dict['after'] = dict()
+        info_dict['proportion'] = dict()
+
+        info_dict['proportion']['moc'] = 0.5
+        if self.app_mode == 'MoC':
+            info_dict['proportion']['moc'] = Web3.fromWei(self.contract_splitter.moc_proportion(), 'ether')
+
+        info_dict['proportion']['multisig'] = 1 - info_dict['proportion']['moc']
+
+        resume = str()
+
+        resume += "Splitter address: [{0}]\n".format(self.contract_splitter.address())
+        resume += "Multisig address: [{0}]\n".format(self.contract_splitter.commission_address())
+        resume += "MoC address: [{0}]\n".format(self.contract_splitter.moc_address())
+        resume += "Proportion MOC: [{0}]\n".format(info_dict['proportion']['moc'])
+        resume += "Proportion Multisig: [{0}]\n".format(info_dict['proportion']['multisig'])
+
+        resume += "BEFORE SPLIT:\n"
+        resume += "=============\n"
+
+        info_dict['before']['splitter'] = self.contract_splitter.balance()
+        resume += "Splitter balance: [{0}]\n".format(info_dict['before']['splitter'])
+
+        # balances commision
+        balance = Web3.fromWei(self.connection_manager.balance(self.contract_splitter.commission_address()), 'ether')
+        info_dict['before']['commission'] = balance
+        resume += "Multisig balance (proportion: {0}): [{1}]\n".format(info_dict['proportion']['multisig'],
+                                                                 info_dict['before']['commission'])
+
+        # balances moc
+        balance = Web3.fromWei(self.connection_manager.balance(self.contract_splitter.moc_address()), 'ether')
+        info_dict['before']['moc'] = balance
+        resume += "MoC balance (proportion: {0}): [{1}]\n".format(info_dict['proportion']['moc'],
+                                                            info_dict['before']['moc'])
+
+        tx_hash, tx_receipt = self.contract_splitter.split(gas_limit=gas_limit,
+                                                           wait_timeout=wait_timeout)
+
+        resume += "AFTER SPLIT:\n"
+        resume += "=============\n"
+
+        info_dict['after']['splitter'] = self.contract_splitter.balance()
+        dif = info_dict['after']['splitter'] - info_dict['before']['splitter']
+        resume += "Splitter balance: [{0}] Difference: [{1}]\n".format(info_dict['after']['splitter'], dif)
+
+        # balances commision
+        balance = Web3.fromWei(self.connection_manager.balance(self.contract_splitter.commission_address()), 'ether')
+        info_dict['after']['commission'] = balance
+        dif = info_dict['after']['commission'] - info_dict['before']['commission']
+        resume += "Multisig balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
+            info_dict['proportion']['multisig'],
+            info_dict['after']['commission'],
+            dif)
+
+        # balances moc
+        balance = Web3.fromWei(self.connection_manager.balance(self.contract_splitter.moc_address()), 'ether')
+        info_dict['after']['moc'] = balance
+        dif = info_dict['after']['moc'] - info_dict['before']['moc']
+        resume += "MoC balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
+            info_dict['proportion']['moc'],
+            info_dict['after']['moc'],
+            dif)
+
+        if tx_hash:
+            log.info(resume)
+
     def contract_pay_bitpro_holders(self):
 
         wait_timeout = self.options['tasks']['pay_bitpro_holders']['wait_timeout']
@@ -129,7 +208,9 @@ class JobsManager:
         tx_hash, tx_receipt = self.contract_MoC.execute_pay_bitpro_holders(gas_limit=gas_limit,
                                                                            wait_timeout=wait_timeout)
 
-        if not tx_hash:
+        if tx_hash:
+            self.contract_splitter_split()
+        else:
             log.info("NO: payBitProHoldersInterestPayment!")
 
     def contract_calculate_bma(self):
@@ -214,6 +295,14 @@ class JobsManager:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(1)
 
+    def task_splitter_split(self):
+
+        try:
+            self.contract_splitter_split()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(1)
+
     def add_jobs(self):
 
         log.info("Starting adding jobs...")
@@ -263,6 +352,12 @@ class JobsManager:
             interval = self.options['tasks']['oracle_poke']['interval']
             self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
 
+        # Splitter split
+        # if 'splitter_split' in self.options['tasks']:
+        #     log.info("Jobs add Splitter split")
+        #     interval = self.options['tasks']['splitter_split']['interval']
+        #     self.tl._add_job(self.task_splitter_split, datetime.timedelta(seconds=interval))
+
     def time_loop_start(self):
 
         self.add_jobs()
@@ -301,7 +396,8 @@ if __name__ == '__main__':
         config = json.loads(os.environ['MOC_JOBS_CONFIG'])
     else:
         if not options.config:
-            config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.json')
+            config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                       'enviroments/rdoc-alpha-testnet/config.json')
         else:
             config_path = options.config
 
@@ -311,7 +407,7 @@ if __name__ == '__main__':
         network = os.environ['MOC_JOBS_NETWORK']
     else:
         if not options.network:
-            network = 'mocTestnetAlpha'
+            network = 'rdocTestnetAlpha'
         else:
             network = options.network
 
