@@ -7,11 +7,11 @@
     }
   },
   "timeout": 30,
-  "gas_price": 65000000,
+  "gas_price": 68000000,
   "networks": {
     "mocTestnet": {
       "app_mode": "MoC",
-      "uri": ["http://10.0.0.73:4444"],
+      "uri": ["https://public-node.testnet.rsk.co"],
       "chain_id": 31,
       "accounts": [
         {
@@ -20,28 +20,8 @@
         }
       ],
       "addresses": {
-        "governor": "0x4eAC4518e81B3A5198aADAb998D2610B46aAA609",
-        "oracle": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
-        "upgradeDelegator": "0xCDAbFbF334A5F6BCe900D2f73470D1e6722365d8",
         "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
-        "MoCInrate": "0x76790f846FAAf44cf1B2D717d0A6c5f6f5152B60",
-        "MoCState": "0x0adb40132cB0ffcEf6ED81c26A1881e214100555",
-        "MoCConverter": "0x47754fcc7151b00dD792E4eb148214bC349f22BE",
-        "MoCExchange": "0xc03Ac60eBbc01A1f4e9b5bb989F359e5D8348919",
-        "MoCConnector": "0xABB405e01Da6212E2d6fc87bbc460c73201cF6b0",
-        "MoCHelperLib": "0xB842F6E4795F0DCE9e05729981B4B1D908dE552c",
-        "MoCBProxManager": "0x634b6c45Eb7b1D8Fe0961BB4586bf585aE718A96",
-        "MoCSettlement": "0x367D283c53f8F10e47424e2AeB102F45eCC49FEa",
-        "MoCBurnout": "0x0a25D19642E1b04f2B2BB9585A0E84204B660f74",
-        "FeedFactory": "0x68DEC3A1e277311b362f2c15313F48075e01379b",
-        "PriceFeed_0": "0xa33EAbE3e2CFbEBB2c16c98994E5EE041A28411a",
-        "PriceFeed_1": "0x033c1D78Fbc34178A7Ee7fa64Fa6f31fEE8f79C2",
-        "PriceFeed_2": "0x5d111d1b49Aa39d0172712266B0DE2F1eB9957F4",
-        "PriceFeed_3": "0x02baf7348859aAC6CfEEc53498A077790244bBe6",
-        "BProToken": "0x4dA7997A819bb46B6758B9102234c289dD2Ad3bf",
-        "DoCToken": "0xCB46c0ddc60D18eFEB0E586C17Af6ea36452Dae0",
-        "MoCMedianizer": "0x78c892Dc5b7139d0Ec1eF513C9E28eDfAA44f2d4",
-        "PriceFeed": ""
+        "CommissionSplitter": "0xC003A2e210FA3E2fBdDcf564Fe0E1bbCd93E3B40"
       }
 
     }

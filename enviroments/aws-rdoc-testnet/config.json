@@ -19,7 +19,7 @@
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 240,
+      "interval": 60,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
@@ -42,19 +42,19 @@
   "timeout": 30,
   "gas_price": 68000000,
   "networks": {
-    "rdocTestnetAlpha": {
+    "rdocTestnet": {
       "app_mode": "RRC20",
-      "uri": ["https://public-node.testnet.rsk.co"],
+      "uri": ["http://moc-rsk-node-testnet.moneyonchain.com:4454"],
       "chain_id": 31,
       "accounts": [
         {
-          "address": "0xA8f94D08D3D9C045fe0B86A953dF39B14206153c",
+          "address": "0xC67D9eE30d2119A384E02de568BE80FE785074Ba",
           "private_key": ""
         }
       ],
       "addresses": {
-        "MoC": "0x4512f4C1d984bbf8B7f7404EddFb1881cFA79EfD",
-        "CommissionSplitter": "0xE79fE1d8D321d01aA973E319112Fb98eA319B7a1"
+        "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
+        "CommissionSplitter": "0x5aF95c49461ef2bE429CD84aDe50867ff5A20fB6"
       }
 
     }

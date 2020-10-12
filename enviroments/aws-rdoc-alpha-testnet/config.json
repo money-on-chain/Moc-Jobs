@@ -44,7 +44,7 @@
   "networks": {
     "rdocTestnetAlpha": {
       "app_mode": "RRC20",
-      "uri": ["https://public-node.testnet.rsk.co"],
+      "uri": ["http://moc-rsk-node-testnet.moneyonchain.com:4454"],
       "chain_id": 31,
       "accounts": [
         {

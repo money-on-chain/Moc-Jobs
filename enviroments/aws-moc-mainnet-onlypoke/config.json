@@ -11,7 +11,7 @@
   "networks": {
     "mocMainnet2": {
       "app_mode": "MoC",
-      "uri": ["https://public-node.rsk.co"],
+      "uri": ["http://moc-rsk-node-mainnet.moneyonchain.com:4454"],
       "chain_id": 30,
       "accounts": [
         {
