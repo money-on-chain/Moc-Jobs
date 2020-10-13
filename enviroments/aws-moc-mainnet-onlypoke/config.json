@@ -7,11 +7,11 @@
     }
   },
   "timeout": 30,
-  "gas_price": 60000000,
+  "gas_price": 60000001,
   "networks": {
     "mocMainnet2": {
       "app_mode": "MoC",
-      "uri": ["http://moc-rsk-node-mainnet.moneyonchain.com:4454"],
+      "uri": ["https://public-node.rsk.co"],
       "chain_id": 30,
       "accounts": [
         {

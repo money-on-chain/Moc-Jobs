@@ -33,6 +33,11 @@
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
+    "oracle_poke": {
+      "interval": 120,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
     "splitter_split": {
       "interval": 72,
       "wait_timeout": 240,
@@ -40,7 +45,7 @@
     }
   },
   "timeout": 60,
-  "gas_price": 60000000,
+  "gas_price": 60000001,
   "networks": {
     "rdocMainnet": {
       "app_mode": "RRC20",

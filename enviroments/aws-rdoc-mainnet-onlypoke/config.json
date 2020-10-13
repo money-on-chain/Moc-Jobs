@@ -7,11 +7,11 @@
     }
   },
   "timeout": 60,
-  "gas_price": 60000000,
+  "gas_price": 60000001,
   "networks": {
     "rdocMainnet": {
       "app_mode": "RRC20",
-      "uri": ["http://moc-rsk-node-mainnet.moneyonchain.com:4454"],
+      "uri": ["https://public-node.rsk.co"],
       "chain_id": 30,
       "accounts": [
         {
@@ -20,23 +20,8 @@
         }
       ],
       "addresses": {
-        "governor": "0xC61F0392d5170214b5D93C0BC4c4354163aBC1f7",
-        "oracle": "0x504EfCadFB020d6bBaeC8a5c5BB21453719d0E00",
-        "MoCMedianizer": "0x504EfCadFB020d6bBaeC8a5c5BB21453719d0E00",
-        "upgradeDelegator": "0x5cE577f6Ec969CE9a282838D350206C52A6F338C",
         "MoC": "0xCfF3fcaeC2352C672C38d77cb1a064B7D50ce7e1",
-        "MoCInrate": "0x1DaB07c4FD07d6eE1359a5198ACa2DEe64F371f3",
-        "MoCState": "0x541F68a796Fe5ae3A381d2Aa5a50b975632e40A6",
-        "MoCConverter": "0x94f6680201e5FBCA94fB8569adFD8C1EE7Cb061C",
-        "MoCExchange": "0x9497d2AEcd0757Dd4fcb4d5F2131293570FaD305",
-        "MoCConnector": "0xA0e2554E525B34FD186C2C356C93d563541b02C0",
-        "MoCHelperLib": "0x8B8ccC595Fe732eC46Ae5c9cd269feb834d1C791",
-        "MoCBProxManager": "0x07Cd11fC4c4eC0BdBdC2Ec495f66A69bba32e7e7",
-        "MoCSettlement": "0xb8a6beBa78c3E73f6A66DDacFaEB240ae22Ca709",
-        "MoCBurnout": "0x89fBF64ea00123F03b41f60eC23Cf1b6C6E382a8",
-        "BProToken": "0xf4d27c56595Ed59B66cC7F03CFF5193e4bd74a61",
-        "DoCToken": "0x2d919F19D4892381D58edeBeca66D5642Cef1a1f",
-        "ReserveToken": "0x2AcC95758f8b5F583470ba265EB685a8F45fC9D5"
+        "CommissionSplitter": "0xaC7dE98a426F6FF51e1Bd6588b41544C8Addb2D1"
       }
 
     }
