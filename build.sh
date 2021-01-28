@@ -9,9 +9,9 @@ while getopts ":e:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
-             ((e == "ec2-tyd" || e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" || e=="ec2_rdoc_alphatestnet" || e=="ec2_rdoc_testnet" || e=="ec2_rdoc_mainnet")) || usage
+             ((e == "ec2_tyd" || e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" || e=="ec2_rdoc_alphatestnet" || e=="ec2_rdoc_testnet" || e=="ec2_rdoc_mainnet")) || usage
             case $e in
-                ec2-tyd)
+                ec2_tyd)
                     ENV=$e
                     ;;
                 ec2_alphatestnet)
