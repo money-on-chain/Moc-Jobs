@@ -41,7 +41,7 @@ class JobsManager:
             config_network=self.config_network)
 
         # only if is the first time
-        self.network_manager.install()
+        #self.network_manager.install()
 
         # Connect to network
         self.network_manager.connect()
