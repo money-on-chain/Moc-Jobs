@@ -9,27 +9,9 @@ while getopts ":e:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
-             ((e == "moc-tyd" || e == "moc-alphatestnet" || e == "moc-testnet" || e == "moc-mainnet" || e == "rdoc-mainnet" || e == "rdoc-testnet" || e == "rdoc-alpha-testnet" || e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" || e=="ec2_rdoc_alphatestnet" || e=="ec2_rdoc_testnet" || e=="ec2_rdoc_mainnet")) || usage
+             ((e == "ec2-tyd" || e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" || e=="ec2_rdoc_alphatestnet" || e=="ec2_rdoc_testnet" || e=="ec2_rdoc_mainnet")) || usage
             case $e in
-                moc-tyd)
-                    ENV=$e
-                    ;;
-                moc-alphatestnet)
-                    ENV=$e
-                    ;;
-                moc-testnet)      
-                    ENV=$e
-                    ;;
-                moc-mainnet)      
-                    ENV=$e
-                    ;;
-                rdoc-alpha-testnet)
-                    ENV=$e
-                    ;;
-                rdoc-testnet)
-                    ENV=$e
-                    ;; 
-                rdoc-mainnet)
+                ec2-tyd)
                     ENV=$e
                     ;;
                 ec2_alphatestnet)
