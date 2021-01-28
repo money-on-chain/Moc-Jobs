@@ -40,18 +40,10 @@
     }
   },
   "timeout": 30,
-  "gas_price": 68000000,
   "networks": {
     "mocTestnet": {
       "app_mode": "MoC",
-      "uri": ["https://public-node.testnet.rsk.co"],
-      "chain_id": 31,
-      "accounts": [
-        {
-          "address": "0xE2929d888015EB568AFfa06aaB946923a7236Ad9",
-          "private_key": ""
-        }
-      ],
+      "gas_price": 68000000,
       "addresses": {
         "MoC": "0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F",
         "CommissionSplitter": "0xC003A2e210FA3E2fBdDcf564Fe0E1bbCd93E3B40"
