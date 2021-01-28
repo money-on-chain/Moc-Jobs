@@ -13,6 +13,7 @@ run async of the app, and call directly to the contract througth node.
  5. Contract pay bitpro holders
  6. Contract calculate EMA
  7. Oracle Compute: Check expiration of price in Oracle.
+ 8. Execute Commision splitter
  
  
 ### Usage
@@ -33,11 +34,13 @@ Make sure to change **config.json** to point to your network.
 
 Alternatives:
 
-`python moc_jobs.py --network=mocTestnetAlpha`
+`python moc_jobs.py --config_network=rdocTestnetAlpha --connection_network=rskTesnetPublic`
 
 **--config:** Path to config.json 
 
-**--network=local:** Network name in the json
+**--config_network=rdocTestnetAlpha:** This is enviroment we want to use
+
+**--connection_network=rskTesnetPublic:** Connection Network name this is the label of brownie predefined connection
 
 
 **Usage Docker**
@@ -54,7 +57,8 @@ Run
 docker run -d \
 --name moc_jobs_1 \
 --env ACCOUNT_PK_SECRET=0x9e790b185e5b7f11f2924c7b809936866c38ed3ab3f33e0fbd3cfe791c2cdbd6 \
---env MOC_JOBS_NETWORK=mocTestnetAlpha \
+--env APP_CONFIG_NETWORK=mocTestnetAlpha \
+--env APP_CONNECTION_NETWORK=rskTesnetPublic \
 moc_jobs
 ```
   
@@ -158,11 +162,12 @@ Image should be now available in the AWS repository for Fargate usage
 AWS Jobs are setup as services in AWS ECS. On the task definition it's important to set up the proper environment variables.
 
 
-1. MOC_JOBS_CONFIG: The config.json you find in your _version/ENVIRONMENT_ folder as a flattened json
+1. APP_CONFIG: The config.json you find in your _version/ENVIRONMENT_ folder as a flattened json
 2. ACCOUNT_PK_SECRET: The Private Key of the account that the jobs use. You need to set this as **"valueFrom"** and store the PK in AWS System Manager as an **encrypted parameter**
 3. MOC_JOBS_NAME: The name of the environment where you are deploying (moc-alphatestnet, moc-testnet, rrc20-testnet)
 4. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY: these are needed for the heartbeat function of the jobs, as it needs an account that has write access to a metric in Cloudwatch
-5. MOC_JOBS_NETWORK: The network here is listed in MOC_JOBS_CONFIG
+5. APP_CONFIG_NETWORK: The enviroment we want to connect
+5. APP_CONNECTION_NETWORK: Coonection network
 
 **Note Important:** Take a look to folder **enviroments**. Tasks Definitions.
 
