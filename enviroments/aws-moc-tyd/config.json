@@ -1,0 +1,56 @@
+{
+  "tasks": {
+    "run_settlement": {
+      "interval": 15,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "liquidation": {
+      "interval": 20,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "bucket_liquidation": {
+      "interval": 20,
+      "wait_timeout": 240,
+      "partial_execution_steps": 20,
+      "gas_limit": 3500000
+    },
+    "daily_inrate_payment": {
+      "interval": 240,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "pay_bitpro_holders": {
+      "interval": 65,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "calculate_bma": {
+      "interval": 72,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
+    "splitter_split": {
+      "interval": 72,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    }
+  },
+  "timeout": 60,
+  "networks": {
+    "mocTyd": {
+      "gas_price": 68000000,
+      "app_mode": "MoC",
+      "addresses": {
+        "MoC": "0x71d0921010ca8367835d34f7f3d215047e307581",
+        "CommissionSplitter": "0x247c8efef0dd5175456dd571c6c6eda77e9c4c5f"
+      }
+
+    }
+
+  }
+
+}
