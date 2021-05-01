@@ -7,8 +7,11 @@ from timeloop import Timeloop
 import boto3
 import time
 from web3 import Web3
+from brownie.network.gas.strategies import TimeGasStrategy
+from typing import Generator
 
-from moneyonchain.networks import NetworkManager
+
+from moneyonchain.networks import NetworkManager, web3
 from moneyonchain.moc import MoC, CommissionSplitter
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
@@ -23,6 +26,47 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 log = logging.getLogger('default')
+
+
+class GasPriceIncrementStrategy(TimeGasStrategy):
+    """
+    Gas strategy for linear gas price increase.
+
+    Arguments
+    ---------
+    increment : float
+        Multiplier applied to the previous gas price in order to determine the new gas price
+    max_increment : float
+        Multiplier applied to the previous gas price in order to determine the new gas price
+    time_duration : int
+        Number of seconds between transactions
+    """
+
+    def __init__(
+        self,
+        increment: float = 1.11,
+        max_increment: float = 2.00,
+        time_duration: int = 10,
+    ):
+        super().__init__(time_duration)
+        self.initial_gas_price = 59500000.0 * increment # web3.eth.gas_price() * increment
+        self.max_gas_price = 59600000.0 * max_increment #web3.eth.gas_price() * max_increment
+        self.increment = increment
+
+        print("Gas Price: {0}".format(web3.eth.gas_price()))
+        print("Gas Price Initial: {0}".format(self.initial_gas_price))
+        print("Gas Price Max: {0}".format(self.max_gas_price))
+
+    def get_gas_price(self) -> Generator[int, None, None]:
+        last_gas_price = self.initial_gas_price
+        print("Gas Price 1: {0}".format(last_gas_price))
+        yield last_gas_price
+
+        while True:
+            last_gas_price = min(int(last_gas_price * self.increment), self.max_gas_price)
+            print("Last Price X: {0}".format(last_gas_price))
+            print(datetime.datetime.now().strftime("%m:%s"))
+            yield last_gas_price
 
 
 class JobsManager:
@@ -103,6 +147,7 @@ class JobsManager:
 
         tx_receipt = self.contract_MoC.execute_liquidation(
             partial_execution_steps,
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         log.info("Task :: liquidation :: OK")
@@ -112,6 +157,7 @@ class JobsManager:
         gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
         tx_receipt = self.contract_MoC.execute_bucket_liquidation(
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         log.info("Task :: bucket liquidation :: OK")
@@ -123,6 +169,7 @@ class JobsManager:
 
         tx_receipt = self.contract_MoC.execute_run_settlement(
             partial_execution_steps,
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         log.info("Task :: runSettlement :: OK")
@@ -132,6 +179,7 @@ class JobsManager:
         gas_limit = self.options['tasks']['daily_inrate_payment']['gas_limit']
 
         tx_receipt = self.contract_MoC.execute_daily_inrate_payment(
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         log.info("Task :: dailyInratePayment :: OK")
@@ -182,6 +230,7 @@ class JobsManager:
             info_dict['before']['moc'])
 
         tx_receipt = self.contract_splitter.split(
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         resume += "AFTER SPLIT:\n"
@@ -218,6 +267,7 @@ class JobsManager:
         gas_limit = self.options['tasks']['pay_bitpro_holders']['gas_limit']
 
         tx_receipt = self.contract_MoC.execute_pay_bitpro_holders(
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         if tx_receipt:
@@ -230,6 +280,7 @@ class JobsManager:
         gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
 
         tx_receipt = self.contract_MoC.execute_calculate_ema(
+            gas_price=GasPriceIncrementStrategy(),
             gas_limit=gas_limit)
 
         log.info("Task :: calculateBitcoinMovingAverage :: OK")
@@ -241,6 +292,7 @@ class JobsManager:
         tx_receipt = None
         if not self.contract_MoCMedianizer.compute()[1] and self.contract_MoCMedianizer.peek()[1]:
             tx_receipt = self.contract_MoCMedianizer.poke(
+                gas_price=GasPriceIncrementStrategy(),
                 gas_limit=gas_limit)
             log.error("[POKE] Not valid price! Disabling MOC Price!")
             self.aws_put_metric_heart_beat(1)
@@ -361,10 +413,10 @@ class JobsManager:
             self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
 
         # Splitter split
-        # if 'splitter_split' in self.options['tasks']:
-        #     log.info("Jobs add Splitter split")
-        #     interval = self.options['tasks']['splitter_split']['interval']
-        #     self.tl._add_job(self.task_splitter_split, datetime.timedelta(seconds=interval))
+        if 'splitter_split' in self.options['tasks']:
+            log.info("Jobs add Splitter split")
+            interval = self.options['tasks']['splitter_split']['interval']
+            self.tl._add_job(self.task_splitter_split, datetime.timedelta(seconds=interval))
 
     def time_loop_start(self):
 

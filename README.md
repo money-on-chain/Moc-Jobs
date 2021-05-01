@@ -178,28 +178,9 @@ AWS Jobs are setup as services in AWS ECS. On the task definition it's important
 2. ACCOUNT_PK_SECRET: The Private Key of the account that the jobs use. You need to set this as **"valueFrom"** and store the PK in AWS System Manager as an **encrypted parameter**
 3. MOC_JOBS_NAME: The name of the environment where you are deploying (moc-alphatestnet, moc-testnet, rrc20-testnet)
 4. AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY: these are needed for the heartbeat function of the jobs, as it needs an account that has write access to a metric in Cloudwatch
-5. APP_CONFIG_NETWORK: The enviroment we want to connect
-5. APP_CONNECTION_NETWORK: Coonection network
+5. APP_CONFIG_NETWORK: The enviroment we want to connect. Ex: mocTestnetAlpha
+5. APP_CONNECTION_NETWORK: Connection network. Ex: rskTesnetPublic
+7. AWS_DEFAULT_REGION: us-west-1
 
 **Note Important:** Take a look to folder **enviroments**. Tasks Definitions.
 
-### Below are the all the steps necessary, from creating the task until the service is created
-
-
-![Diagram](./img/1.png)
-![Diagram](./img/2.png)
-![Diagram](./img/3.png)
-![Diagram](./img/4.png)
-![Diagram](./img/5.png)
-![Diagram](./img/6.png)
-![Diagram](./img/7.png)
-![Diagram](./img/8.png)
-![Diagram](./img/9.png)
-![Diagram](./img/10.png)
-![Diagram](./img/11.png)
-![Diagram](./img/12.png)
-![Diagram](./img/13.png)
-
-**Check that the service is in RUNNING state and check the logs tab to validate it's working fine**
-
-![Diagram](./img/14.png)
