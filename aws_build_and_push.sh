@@ -37,6 +37,14 @@ while getopts ":e:c:i:" o; do
                     ;;
             esac
             ;;
+        c)
+            c=${OPTARG}
+            CONFIG_FILE=$c
+            ;;
+        i)
+            i=${OPTARG}
+            AWS_ID=$i
+            ;;
         *)
             usage
             ;;
