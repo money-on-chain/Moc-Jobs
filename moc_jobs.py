@@ -8,7 +8,6 @@ import boto3
 import time
 from web3 import Web3
 
-from moneyonchain.networks import network_manager
 from moneyonchain.moc import MoC, CommissionSplitter
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
@@ -77,6 +76,8 @@ class JobsManager:
     @staticmethod
     def install_custom_network(connection_net):
         """ Install custom network """
+
+        from moneyonchain.networks import network_manager
 
         if connection_net.startswith("https") or connection_net.startswith("https"):
             a_connection = connection_net.split(',')
@@ -162,6 +163,8 @@ class JobsManager:
         log.info("Task :: dailyInratePayment :: OK")
 
     def contract_splitter_split(self):
+
+        from moneyonchain.networks import network_manager
 
         gas_limit = self.options['tasks']['splitter_split']['gas_limit']
 
@@ -400,6 +403,7 @@ class JobsManager:
             try:
                 time.sleep(1)
             except KeyboardInterrupt:
+                from moneyonchain.networks import network_manager
                 self.tl.stop()
                 log.info("Shutting DOWN! TASKS")
                 network_manager.disconnect()
