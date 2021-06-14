@@ -8,7 +8,7 @@ import boto3
 import time
 from web3 import Web3
 
-from moneyonchain.networks import NetworkManager
+from moneyonchain.networks import network_manager
 from moneyonchain.moc import MoC, CommissionSplitter
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
@@ -25,6 +25,12 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger('default')
 
 
+__VERSION__ = '2.0.0'
+
+
+log.info("Starting MoC Jobs version {0}".format(__VERSION__))
+
+
 class JobsManager:
 
     def __init__(self, app_config, config_net, connection_net):
@@ -33,41 +39,56 @@ class JobsManager:
         self.config_network = config_net
         self.connection_network = connection_net
 
-        # init network manager
-        # connection network is the brownie connection network
-        # config network is our enviroment we want to connect
-        self.network_manager = NetworkManager(
-            connection_network=self.connection_network,
-            config_network=self.config_network)
-
-        # only if is the first time
-        #self.network_manager.install()
+        # install custom network if needit
+        custom_installed = self.install_custom_network(connection_net)
+        if custom_installed:
+            self.connection_network = 'rskCustomNetwork'
 
         # Connect to network
-        self.network_manager.connect()
+        network_manager.connect(
+            connection_network=self.connection_network,
+            config_network=self.config_network)
 
         self.app_mode = self.options['networks'][self.config_network]['app_mode']
 
         if self.app_mode == 'RRC20':
             self.contract_MoC = RDOCMoC(
-                self.network_manager,
+                network_manager,
                 load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = RDOCMoCMedianizer(
-                self.network_manager,
+                network_manager,
                 contract_address=self.contract_MoCState.price_provider()).from_abi()
-            self.contract_splitter = RDOCCommissionSplitter(self.network_manager).from_abi()
+            self.contract_splitter = RDOCCommissionSplitter(network_manager).from_abi()
         elif self.app_mode == 'MoC':
-            self.contract_MoC = MoC(self.network_manager, load_sub_contract=False).from_abi().contracts_discovery()
+            self.contract_MoC = MoC(network_manager, load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = MoCMedianizer(
-                self.network_manager,
+                network_manager,
                 contract_address=self.contract_MoCState.price_provider()).from_abi()
-            self.contract_splitter = CommissionSplitter(self.network_manager).from_abi()
+            self.contract_splitter = CommissionSplitter(network_manager).from_abi()
         else:
             raise Exception("Not valid APP Mode")
 
         self.tl = Timeloop()
+
+    @staticmethod
+    def install_custom_network(connection_net):
+        """ Install custom network """
+
+        if connection_net.startswith("https") or connection_net.startswith("https"):
+            a_connection = connection_net.split(',')
+            host = a_connection[0]
+            chain_id = a_connection[1]
+
+            network_manager.add_network(
+                network_name='rskCustomNetwork',
+                network_host=host,
+                network_chainid=chain_id,
+                network_explorer='https://blockscout.com/rsk/mainnet/api',
+            )
+
+            return True
 
     @staticmethod
     def aws_put_metric_heart_beat(value):
@@ -168,14 +189,14 @@ class JobsManager:
         resume += "Splitter balance: [{0}]\n".format(info_dict['before']['splitter'])
 
         # balances commision
-        balance = Web3.fromWei(self.network_manager.network_balance(
+        balance = Web3.fromWei(network_manager.network_balance(
             self.contract_splitter.commission_address()), 'ether')
         info_dict['before']['commission'] = balance
         resume += "Multisig balance (proportion: {0}): [{1}]\n".format(info_dict['proportion']['multisig'],
                                                                  info_dict['before']['commission'])
 
         # balances moc
-        balance = Web3.fromWei(self.network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
+        balance = Web3.fromWei(network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
         info_dict['before']['moc'] = balance
         resume += "MoC balance (proportion: {0}): [{1}]\n".format(
             info_dict['proportion']['moc'],
@@ -192,7 +213,7 @@ class JobsManager:
         resume += "Splitter balance: [{0}] Difference: [{1}]\n".format(info_dict['after']['splitter'], dif)
 
         # balances commision
-        balance = Web3.fromWei(self.network_manager.network_balance(
+        balance = Web3.fromWei(network_manager.network_balance(
             self.contract_splitter.commission_address()), 'ether')
         info_dict['after']['commission'] = balance
         dif = info_dict['after']['commission'] - info_dict['before']['commission']
@@ -202,7 +223,7 @@ class JobsManager:
             dif)
 
         # balances moc
-        balance = Web3.fromWei(self.network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
+        balance = Web3.fromWei(network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
         info_dict['after']['moc'] = balance
         dif = info_dict['after']['moc'] - info_dict['before']['moc']
         resume += "MoC balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
@@ -377,7 +398,7 @@ class JobsManager:
             except KeyboardInterrupt:
                 self.tl.stop()
                 log.info("Shutting DOWN! TASKS")
-                self.network_manager.disconnect()
+                network_manager.disconnect()
                 break
 
 
@@ -410,8 +431,17 @@ if __name__ == '__main__':
         config = json.loads(os.environ['APP_CONFIG'])
     else:
         if not options.config:
-            config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                       'enviroments/rdoc-alpha-testnet/config.json')
+            # if there are no config try to read config.json from current folder
+            config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.json')
+            if not os.path.isfile(config_path):
+                raise Exception("Please select path to config or env APP_CONFIG. "
+                                "Ex. /enviroments/moc-testnet/config.json "
+                                "Full Ex.:"
+                                "python moc_jobs.py "
+                                "--connection_network=rskTestnetPublic "
+                                "--config_network=mocTestnet "
+                                "--config ./enviroments/moc-testnet/config.json"
+                                )
         else:
             config_path = options.config
 
@@ -421,7 +451,13 @@ if __name__ == '__main__':
         connection_network = os.environ['APP_CONNECTION_NETWORK']
     else:
         if not options.connection_network:
-            connection_network = 'rskTesnetPublic'
+            raise Exception("Please select connection network or env APP_CONNECTION_NETWORK. "
+                            "Ex.: rskTesnetPublic. "
+                            "Full Ex.:"
+                            "python moc_jobs.py "
+                            "--connection_network=rskTestnetPublic "
+                            "--config_network=mocTestnet "
+                            "--config ./enviroments/moc-testnet/config.json")
         else:
             connection_network = options.connection_network
 
@@ -429,7 +465,14 @@ if __name__ == '__main__':
         config_network = os.environ['APP_CONFIG_NETWORK']
     else:
         if not options.config_network:
-            config_network = 'rdocTestnetAlpha'
+            raise Exception("Please select enviroment of your config or env APP_CONFIG_NETWORK. "
+                            "Ex.: rdocTestnetAlpha"
+                            "Full Ex.:"
+                            "python moc_jobs.py "
+                            "--connection_network=rskTestnetPublic "
+                            "--config_network=mocTestnet "
+                            "--config ./enviroments/moc-testnet/config.json"
+                            )
         else:
             config_network = options.config_network
 
