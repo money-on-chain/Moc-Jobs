@@ -23,6 +23,7 @@ RUN brownie networks add RskNetwork rskTestnetCustom host=$BROWNIE_CUSTOM_HOST_T
 RUN brownie networks add RskNetwork rskMainnetPublic host=https://public-node.rsk.co chainid=30 explorer=https://blockscout.com/rsk/mainnet/api
 RUN brownie networks add RskNetwork rskMainnetPrivate host=http://moc-rsk-node-mainnet.moneyonchain.com:4454 chainid=30 explorer=https://blockscout.com/rsk/mainnet/api
 RUN brownie networks add RskNetwork rskMainnetCustom host=$BROWNIE_CUSTOM_HOST_MAINNET chainid=30 explorer=https://blockscout.com/rsk/mainnet/api
+RUN brownie networks add RskNetwork rskCustomNetwork host=https://public-node2.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api
 
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
     && mkdir /home/www-data/app/moc_jobs
