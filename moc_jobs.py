@@ -9,7 +9,7 @@ import boto3
 import time
 from web3 import Web3
 
-from moneyonchain.networks import network_manager
+from moneyonchain import networks
 from moneyonchain.moc import MoC, CommissionSplitter
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
@@ -40,13 +40,14 @@ class JobsManager:
         self.config_network = config_net
         self.connection_network = connection_net
 
-        nm = network_manager
+        nm = networks.network_manager
 
         # install custom network if needit
         custom_installed = self.install_custom_network(connection_net)
         if custom_installed:
             self.connection_network = 'rskCustomNetwork'
-            nm = reload(network_manager)
+            nt = reload(networks)
+            nm = nt.network_manager
 
         # Connect to network
         nm.connect(
@@ -85,11 +86,12 @@ class JobsManager:
             host = a_connection[0]
             chain_id = a_connection[1]
 
-            network_manager.add_network(
+            networks.network_manager.add_network(
                 network_name='rskCustomNetwork',
                 network_host=host,
                 network_chainid=chain_id,
                 network_explorer='https://blockscout.com/rsk/mainnet/api',
+                force=False
             )
 
             time.sleep(10)
