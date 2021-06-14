@@ -44,6 +44,8 @@ class JobsManager:
         if custom_installed:
             self.connection_network = 'rskCustomNetwork'
 
+        from moneyonchain.networks import network_manager
+
         # Connect to network
         network_manager.connect(
             connection_network=self.connection_network,
@@ -88,7 +90,7 @@ class JobsManager:
                 network_explorer='https://blockscout.com/rsk/mainnet/api',
             )
 
-            time.sleep(5)
+            time.sleep(10)
 
             return True
 
