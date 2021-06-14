@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger('default')
 
 
-__VERSION__ = '2.0.0'
+__VERSION__ = '2.1.0'
 
 
 log.info("Starting MoC Jobs version {0}".format(__VERSION__))
