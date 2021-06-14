@@ -1,9 +1,11 @@
+#!/bin/bash
+
 # exit as soon as an error happen
-set -e 
+set -e
 
-usage() { echo "Usage: $0 -e <environment>" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -e <environment> -c <config file> -i <aws id>" 1>&2; exit 1; }
 
-while getopts ":e:" o; do
+while getopts ":e:c:i:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
@@ -42,12 +44,23 @@ while getopts ":e:" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${e}" ]; then
+if [ -z "${e}" ] || [ -z "${c}" ] || [ -z "${i}" ]; then
     usage
 fi
 
-# login into aws ecr
-$(aws ecr get-login --no-include-email --region us-west-1)
+docker image build -t moc_jobs_$ENV -f Dockerfile --build-arg CONFIG=$CONFIG_FILE .
 
-docker tag moc_jobs_$ENV:latest 551471957915.dkr.ecr.us-west-1.amazonaws.com/moc_jobs_$ENV:latest
-docker push 551471957915.dkr.ecr.us-west-1.amazonaws.com/moc_jobs_$ENV:latest
+echo "Build done!"
+
+REGION="us-west-1"
+
+# login into aws ecr
+$(aws ecr get-login --no-include-email --region $REGION)
+
+echo "Logging to AWS done!"
+
+docker tag moc_jobs_$ENV:latest $AWS_ID.dkr.ecr.$REGION.amazonaws.com/moc_jobs_$ENV:latest
+
+docker push $AWS_ID.dkr.ecr.$REGION.amazonaws.com/moc_jobs_$ENV:latest
+
+echo "Done!"

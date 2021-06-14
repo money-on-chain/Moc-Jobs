@@ -27,6 +27,8 @@ RUN brownie networks add RskNetwork rskMainnetCustom host=$BROWNIE_CUSTOM_HOST_M
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
     && mkdir /home/www-data/app/moc_jobs
 
+ARG CONFIG=config.json
+
 WORKDIR /home/www-data/app/moc_jobs/
 COPY moc_jobs.py ./
 #COPY config.json ./

@@ -88,6 +88,8 @@ class JobsManager:
                 network_explorer='https://blockscout.com/rsk/mainnet/api',
             )
 
+            time.sleep(5)
+
             return True
 
     @staticmethod
