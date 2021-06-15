@@ -37,4 +37,4 @@ ADD $CONFIG ./config.json
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
 #CMD ["python", "./moc_jobs.py"]
-CMD /bin/bash -c 'python ./add_custom_network.py; python ./moc_jobs.py'
+CMD /bin/bash -c 'brownie networks add RskNetwork rskCustomNetwork host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api; python ./moc_jobs.py'
