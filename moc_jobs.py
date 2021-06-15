@@ -2,14 +2,13 @@ import os
 from optparse import OptionParser
 import datetime
 import json
-from importlib import reload
 
 from timeloop import Timeloop
 import boto3
 import time
 from web3 import Web3
 
-from moneyonchain import networks
+from moneyonchain.networks import network_manager
 from moneyonchain.moc import MoC, CommissionSplitter
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
@@ -40,17 +39,16 @@ class JobsManager:
         self.config_network = config_net
         self.connection_network = connection_net
 
-        nm = networks.network_manager
-
         # install custom network if needit
-        custom_installed = self.install_custom_network(connection_net)
-        if custom_installed:
+        #custom_installed = self.install_custom_network(connection_net)
+        #if custom_installed:
+        #    self.connection_network = 'rskCustomNetwork'
+
+        if self.connection_network.startswith("https") or self.connection_network.startswith("http"):
             self.connection_network = 'rskCustomNetwork'
-            nt = reload(networks)
-            nm = nt.network_manager
 
         # Connect to network
-        nm.connect(
+        network_manager.connect(
             connection_network=self.connection_network,
             config_network=self.config_network)
 
@@ -58,20 +56,20 @@ class JobsManager:
 
         if self.app_mode == 'RRC20':
             self.contract_MoC = RDOCMoC(
-                nm,
+                network_manager,
                 load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = RDOCMoCMedianizer(
-                nm,
+                network_manager,
                 contract_address=self.contract_MoCState.price_provider()).from_abi()
-            self.contract_splitter = RDOCCommissionSplitter(nm).from_abi()
+            self.contract_splitter = RDOCCommissionSplitter(network_manager).from_abi()
         elif self.app_mode == 'MoC':
-            self.contract_MoC = MoC(nm, load_sub_contract=False).from_abi().contracts_discovery()
+            self.contract_MoC = MoC(network_manager, load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
             self.contract_MoCMedianizer = MoCMedianizer(
-                nm,
+                network_manager,
                 contract_address=self.contract_MoCState.price_provider()).from_abi()
-            self.contract_splitter = CommissionSplitter(nm).from_abi()
+            self.contract_splitter = CommissionSplitter(network_manager).from_abi()
         else:
             raise Exception("Not valid APP Mode")
 
@@ -86,7 +84,7 @@ class JobsManager:
             host = a_connection[0]
             chain_id = a_connection[1]
 
-            networks.network_manager.add_network(
+            network_manager.add_network(
                 network_name='rskCustomNetwork',
                 network_host=host,
                 network_chainid=chain_id,
