@@ -45,18 +45,11 @@
     }
   },
   "timeout": 30,
-  "gas_price": 60000000,
+
   "networks": {
     "mocMainnet2": {
       "app_mode": "MoC",
-      "uri": ["http://moc-rsk-node-mainnet.moneyonchain.com:4454"],
-      "chain_id": 30,
-      "accounts": [
-        {
-          "address": "0xEA14c08764c9e5F212c916E11a5c47Eaf92571e4",
-          "private_key": ""
-        }
-      ],
+      "gas_price": 60000000,
       "addresses": {
         "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
         "CommissionSplitter": "0xa5467535851263122ef1476e24C529CFc6CFc086"

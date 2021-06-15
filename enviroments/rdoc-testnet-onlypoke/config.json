@@ -7,18 +7,10 @@
     }
   },
   "timeout": 30,
-  "gas_price": 68000000,
   "networks": {
     "rdocTestnet": {
       "app_mode": "RRC20",
-      "uri": ["https://public-node.testnet.rsk.co"],
-      "chain_id": 31,
-      "accounts": [
-        {
-          "address": "0xC67D9eE30d2119A384E02de568BE80FE785074Ba",
-          "private_key": ""
-        }
-      ],
+      "gas_price": 68000000,
       "addresses": {
         "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
         "CommissionSplitter": "0x5aF95c49461ef2bE429CD84aDe50867ff5A20fB6"
