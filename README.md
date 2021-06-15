@@ -53,11 +53,11 @@ Make sure to change **config.json** to point to your network.
 
 `export ACCOUNT_PK_SECRET=(Your PK)`
 
-`python moc_jobs.py --connection_network=rskTestnetPublic --config_network=mocTestnet --config ./enviroments/moc-testnet/config.json`
+`python moc_jobs.py --connection_network=rskTestnetPublic --config_network=mocTestnetAlpha --config ./enviroments/moc-alphatestnet2/config.json`
 
 **--config:** Path to config.json 
 
-**--config_network=rdocTestnetAlpha:** This is enviroment we want to use
+**--config_network=mocTestnetAlpha:** This is enviroment we want to use
 
 **--connection_network=rskTesnetPublic:** Connection Network name this is the label of brownie predefined connection or 
 custom connection:`--connection_network=https://public-node.testnet.rsk.co,31` 
@@ -68,7 +68,7 @@ custom connection:`--connection_network=https://public-node.testnet.rsk.co,31`
 Build, change path to correct enviroment
 
 ```
-docker build -t moc_jobs -f Dockerfile --build-arg CONFIG=./enviroments/rdoc-testnet/config.json .
+docker build -t moc_jobs -f Dockerfile --build-arg CONFIG=./enviroments/moc-alphatestnet2/config.json .
 ```
 
 Run, replace ACCOUNT_PK_SECRET  with your private key owner of the account
@@ -78,10 +78,13 @@ docker run -d \
 --name moc_jobs_1 \
 --env ACCOUNT_PK_SECRET=asdfasdfasdf \
 --env APP_CONNECTION_NETWORK=rskTestnetPublic \
---env APP_CONFIG_NETWORK=rdocTestnet \
-price_feeder
+--env APP_CONFIG_NETWORK=mocTestnetAlpha \
+moc_jobs_ec2_alphatestnet
 ```
 
+### Custom node
+
+**APP_CONNECTION_NETWORK:** https://public-node.testnet.rsk.co,31
   
  
 ### Jobs explain

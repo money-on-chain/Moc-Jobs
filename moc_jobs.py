@@ -40,11 +40,20 @@ class JobsManager:
         self.connection_network = connection_net
 
         # install custom network if needit
-        #custom_installed = self.install_custom_network(connection_net)
-        #if custom_installed:
-        #    self.connection_network = 'rskCustomNetwork'
-
         if self.connection_network.startswith("https") or self.connection_network.startswith("http"):
+
+            a_connection = self.connection_network.split(',')
+            host = a_connection[0]
+            chain_id = a_connection[1]
+
+            network_manager.add_network(
+                network_name='rskCustomNetwork',
+                network_host=host,
+                network_chainid=chain_id,
+                network_explorer='https://blockscout.com/rsk/mainnet/api',
+                force=False
+            )
+
             self.connection_network = 'rskCustomNetwork'
 
         # Connect to network
@@ -74,27 +83,6 @@ class JobsManager:
             raise Exception("Not valid APP Mode")
 
         self.tl = Timeloop()
-
-    @staticmethod
-    def install_custom_network(connection_net):
-        """ Install custom network """
-
-        if connection_net.startswith("https") or connection_net.startswith("https"):
-            a_connection = connection_net.split(',')
-            host = a_connection[0]
-            chain_id = a_connection[1]
-
-            network_manager.add_network(
-                network_name='rskCustomNetwork',
-                network_host=host,
-                network_chainid=chain_id,
-                network_explorer='https://blockscout.com/rsk/mainnet/api',
-                force=False
-            )
-
-            time.sleep(10)
-
-            return True
 
     @staticmethod
     def aws_put_metric_heart_beat(value):

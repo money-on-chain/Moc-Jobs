@@ -1,6 +1,5 @@
 import os
 import subprocess
-from moneyonchain.networks import network_manager
 
 import logging
 import logging.config
@@ -13,29 +12,17 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger('default')
 
 
-def add_custom_network(connection_net,
-                       network_group='live',
-                       network_group_name="RskNetwork",
-                       network_name='rskCustomNetwork',
-                       network_host='https://public-node.testnet.rsk.co',
-                       network_chainid='31',
-                       network_explorer='https://blockscout.com/rsk/mainnet/api'
-                       ):
+def add_custom_network(connection_net):
     """ add custom network"""
 
     if connection_net.startswith("https") or connection_net.startswith("http"):
-        log.info("Innn>>>")
         a_connection = connection_net.split(',')
         host = a_connection[0]
         chain_id = a_connection[1]
 
-        # network_manager.add_network(
-        #     network_name='rskCustomNetwork',
-        #     network_host=host,
-        #     network_chainid=chain_id,
-        #     network_explorer='https://blockscout.com/rsk/mainnet/api',
-        #     force=False
-        # )
+        network_group_name = "RskNetwork"
+        network_name = 'rskCustomNetwork'
+        network_explorer = 'https://blockscout.com/rsk/mainnet/api'
 
         subprocess.run(["brownie", "networks", "add",
                         network_group_name,
@@ -47,9 +34,7 @@ def add_custom_network(connection_net,
 
 if __name__ == '__main__':
 
-    log.info("[ADD CUSTOM NETWORK] Init ...")
     if 'APP_CONNECTION_NETWORK' in os.environ:
+        log.info("Adding custom network ...")
         connection_network = os.environ['APP_CONNECTION_NETWORK']
         add_custom_network(connection_network)
-        log.info("[ADD CUSTOM NETWORK] Added ...")
-    log.info("[ADD CUSTOM NETWORK] End ...")
