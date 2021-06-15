@@ -38,4 +38,4 @@ ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
 #CMD ["python", "./moc_jobs.py"]
 #CMD /bin/bash -c 'brownie networks add RskNetwork rskCustomNetwork host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api; python ./moc_jobs.py'
-CMD /bin/bash -c 'add_custom_network.sh; python ./moc_jobs.py'
+CMD /bin/bash -c 'bash ./add_custom_network.sh; python ./moc_jobs.py'

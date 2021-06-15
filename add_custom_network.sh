@@ -1,9 +1,6 @@
 if  [[ $APP_CONNECTION_NETWORK == http* ]] || [[ $APP_CONNECTION_NETWORK == https* ]] ;
 then
+    echo "Adding custom network"
     arrConn=(${APP_CONNECTION_NETWORK//,/ })
-    connHost=arrConn[0]
-    connChainid=arrConn[1]
-    echo connHost
-    echo connChainid
-    brownie networks add RskNetwork rskCustomNetwork host=$connHost chainid=$connChainid explorer=https://blockscout.com/rsk/mainnet/api
+    brownie networks add RskNetwork rskCustomNetwork host=${arrConn[0]} chainid=${arrConn[1]} explorer=https://blockscout.com/rsk/mainnet/api
 fi
