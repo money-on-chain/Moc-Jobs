@@ -30,11 +30,12 @@ RUN mkdir /home/www-data && mkdir /home/www-data/app \
 ARG CONFIG=config.json
 
 WORKDIR /home/www-data/app/moc_jobs/
-COPY add_custom_network.py ./
+COPY add_custom_network.sh ./
 COPY moc_jobs.py ./
 #COPY config.json ./
 ADD $CONFIG ./config.json
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
 #CMD ["python", "./moc_jobs.py"]
-CMD /bin/bash -c 'brownie networks add RskNetwork rskCustomNetwork host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api; python ./moc_jobs.py'
+#CMD /bin/bash -c 'brownie networks add RskNetwork rskCustomNetwork host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api; python ./moc_jobs.py'
+CMD /bin/bash -c 'add_custom_network.sh; python ./moc_jobs.py'
