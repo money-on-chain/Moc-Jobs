@@ -56,6 +56,8 @@ class JobsManager:
 
             self.connection_network = 'rskCustomNetwork'
 
+            log.info("Using custom network... id: {}".format(self.connection_network))
+
         # Connect to network
         network_manager.connect(
             connection_network=self.connection_network,
