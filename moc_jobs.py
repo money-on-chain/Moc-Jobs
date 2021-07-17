@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger('default')
 
 
-__VERSION__ = '2.1.0'
+__VERSION__ = '2.1.1'
 
 
 log.info("Starting MoC Jobs version {0}".format(__VERSION__))
@@ -38,6 +38,9 @@ class JobsManager:
         self.options = app_config
         self.config_network = config_net
         self.connection_network = connection_net
+        self.last_block = 0
+
+        self.app_mode = self.options['networks'][self.config_network]['app_mode']
 
         # install custom network if needit
         if self.connection_network.startswith("https") or self.connection_network.startswith("http"):
@@ -58,12 +61,21 @@ class JobsManager:
 
             log.info("Using custom network... id: {}".format(self.connection_network))
 
+        # connect and init contracts
+        self.connect()
+
+        # start Timeloop
+        self.tl = Timeloop()
+
+    def connect(self):
+        """ Init connection"""
+
         # Connect to network
         network_manager.connect(
             connection_network=self.connection_network,
             config_network=self.config_network)
 
-        self.app_mode = self.options['networks'][self.config_network]['app_mode']
+        # init Contracts
 
         if self.app_mode == 'RRC20':
             self.contract_MoC = RDOCMoC(
@@ -83,8 +95,6 @@ class JobsManager:
             self.contract_splitter = CommissionSplitter(network_manager).from_abi()
         else:
             raise Exception("Not valid APP Mode")
-
-        self.tl = Timeloop()
 
     @staticmethod
     def aws_put_metric_heart_beat(value):
@@ -264,69 +274,87 @@ class JobsManager:
 
         log.info("Task :: oracle Poke :: OK")
 
-    def task_run_settlement(self):
+    def reconnect_on_lost_chain(self):
+
+        block = network_manager.block_number
+
+        if not self.last_block:
+            self.last_block = block
+            return
+
+        if block <= self.last_block:
+            # this means no new blocks from the last call,
+            # so this means a halt node, try to reconnect.
+
+            log.error("[ERROR BLOCKCHAIN CONNECT!] Same block from the last time! going to reconnect!")
+
+            # Raise exception
+            self.aws_put_metric_heart_beat(1)
+
+            # first disconnect
+            network_manager.disconnect()
+
+            # and then reconnect all again
+            self.connect()
+
+        log.info("Task :: Reconnect on lost chain :: OK :: Block height: {0} Block Height Current: {1}".format(
+            block, self.last_block))
+
+        # save the last block
+        self.last_block = block
+
+    def run_watch_exception(self, task_function):
 
         try:
-            self.contract_run_settlement()
+            task_function()
         except Exception as e:
             log.error(e, exc_info=True)
             self.aws_put_metric_heart_beat(1)
+
+    def task_reconnect_on_lost_chain(self):
+        """ Task reconnect when lost connection on chain """
+
+        self.run_watch_exception(self.reconnect_on_lost_chain)
+
+    def task_run_settlement(self):
+        """ task run settlement"""
+
+        self.run_watch_exception(self.contract_run_settlement)
 
     def task_liquidation(self):
+        """ task liquidation """
 
-        try:
-            self.contract_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_liquidation)
 
     def task_bucket_liquidation(self):
+        """ Task bucket liquidation """
 
-        try:
-            self.contract_bucket_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_bucket_liquidation)
 
     def task_daily_inrate_payment(self):
+        """ task daily inrate payment """
 
-        try:
-            self.contract_daily_inrate_payment()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_daily_inrate_payment)
 
     def task_pay_bitpro_holders(self):
+        """ Task pay bitpro holders """
 
-        try:
-            self.contract_pay_bitpro_holders()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_pay_bitpro_holders)
 
     def task_calculate_bma(self):
+        """ Calculate bma """
 
-        try:
-            self.contract_calculate_bma()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_calculate_bma)
 
     def task_oracle_poke(self):
+        """ Oracle poke """
 
-        try:
-            self.contract_oracle_poke()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_oracle_poke)
 
     def task_splitter_split(self):
+        """ Task splitter split """
 
-        try:
-            self.contract_splitter_split()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_splitter_split)
 
     def add_jobs(self):
 
@@ -334,6 +362,10 @@ class JobsManager:
 
         # creating the alarm
         self.aws_put_metric_heart_beat(0)
+
+        # Reconnect on lost chain
+        log.info("Jobs add reconnect on lost chain")
+        self.tl._add_job(self.task_reconnect_on_lost_chain, datetime.timedelta(seconds=60))
 
         # run_settlement
         if 'run_settlement' in self.options['tasks']:
