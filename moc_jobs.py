@@ -365,7 +365,7 @@ class JobsManager:
 
         # Reconnect on lost chain
         log.info("Jobs add reconnect on lost chain")
-        self.tl._add_job(self.task_reconnect_on_lost_chain, datetime.timedelta(seconds=60))
+        self.tl._add_job(self.task_reconnect_on_lost_chain, datetime.timedelta(seconds=240))
 
         # run_settlement
         if 'run_settlement' in self.options['tasks']:
