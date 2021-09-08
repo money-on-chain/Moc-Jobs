@@ -20,7 +20,7 @@ run async of the app, and call directly to the contract througth node.
 
 **Requirement and installation**
  
-*  We need Python 3.6+
+*  We need Python 3.9+
 
 Install libraries
 
@@ -28,7 +28,7 @@ Install libraries
 
 **Brownie and node connection**
 
-`pip install eth-brownie==1.14.6`
+`pip install eth-brownie==1.16.2`
 
 and to install connection nodes required to connect:
 
@@ -53,7 +53,7 @@ Make sure to change **config.json** to point to your network.
 
 `export ACCOUNT_PK_SECRET=(Your PK)`
 
-`python moc_jobs.py --connection_network=rskTestnetPublic --config_network=mocTestnetAlpha --config ./enviroments/moc-alphatestnet2/config.json`
+`python app_run_moc_jobs.py --connection_network=rskTestnetPublic --config_network=mocTestnetAlpha --config ./enviroments/moc-alphatestnet2/config.json`
 
 **--config:** Path to config.json 
 
