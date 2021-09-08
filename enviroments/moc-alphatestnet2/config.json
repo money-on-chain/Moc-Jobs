@@ -4,7 +4,7 @@
       "interval": 15,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
-      "gas_limit": 3500000
+      "gas_limit": 5000000
     },
     "liquidation": {
       "interval": 20,
@@ -19,22 +19,22 @@
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 240,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 65,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 72,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "splitter_split": {
-      "interval": 72,
+      "interval": 40,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }
