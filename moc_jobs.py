@@ -6,10 +6,13 @@ import json
 from timeloop import Timeloop
 import boto3
 import time
+from web3 import Web3
 
-from moneyonchain.manager import ConnectionManager
-from moneyonchain.rdoc import RDOCMoC, RDOCMoCMedianizer
-from moneyonchain.moc import MoC, MoCMedianizer
+from moneyonchain.networks import network_manager
+from moneyonchain.moc import MoC, CommissionSplitter
+from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter
+from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
+
 
 import logging
 import logging.config
@@ -22,29 +25,76 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger('default')
 
 
+__VERSION__ = '2.1.1'
+
+
+log.info("Starting MoC Jobs version {0}".format(__VERSION__))
+
+
 class JobsManager:
 
-    def __init__(self, moc_jobs_config, network_nm):
+    def __init__(self, app_config, config_net, connection_net):
 
-        self.options = moc_jobs_config
-        self.network = network_nm
-        self.connection_manager = ConnectionManager(options=moc_jobs_config, network=network_nm)
-        self.app_mode = self.options['networks'][network]['app_mode']
+        self.options = app_config
+        self.config_network = config_net
+        self.connection_network = connection_net
+        self.last_block = 0
+
+        self.app_mode = self.options['networks'][self.config_network]['app_mode']
+
+        # install custom network if needit
+        if self.connection_network.startswith("https") or self.connection_network.startswith("http"):
+
+            a_connection = self.connection_network.split(',')
+            host = a_connection[0]
+            chain_id = a_connection[1]
+
+            network_manager.add_network(
+                network_name='rskCustomNetwork',
+                network_host=host,
+                network_chainid=chain_id,
+                network_explorer='https://blockscout.com/rsk/mainnet/api',
+                force=False
+            )
+
+            self.connection_network = 'rskCustomNetwork'
+
+            log.info("Using custom network... id: {}".format(self.connection_network))
+
+        # connect and init contracts
+        self.connect()
+
+        # start Timeloop
+        self.tl = Timeloop()
+
+    def connect(self):
+        """ Init connection"""
+
+        # Connect to network
+        network_manager.connect(
+            connection_network=self.connection_network,
+            config_network=self.config_network)
+
+        # init Contracts
 
         if self.app_mode == 'RRC20':
-            self.contract_MoC = RDOCMoC(self.connection_manager, contracts_discovery=True)
+            self.contract_MoC = RDOCMoC(
+                network_manager,
+                load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
-            self.contract_MoCMedianizer = RDOCMoCMedianizer(self.connection_manager,
-                                                            contract_address=self.contract_MoCState.price_provider())
+            self.contract_MoCMedianizer = RDOCMoCMedianizer(
+                network_manager,
+                contract_address=self.contract_MoCState.price_provider()).from_abi()
+            self.contract_splitter = RDOCCommissionSplitter(network_manager).from_abi()
         elif self.app_mode == 'MoC':
-            self.contract_MoC = MoC(self.connection_manager, contracts_discovery=True)
+            self.contract_MoC = MoC(network_manager, load_sub_contract=False).from_abi().contracts_discovery()
             self.contract_MoCState = self.contract_MoC.sc_moc_state
-            self.contract_MoCMedianizer = MoCMedianizer(self.connection_manager,
-                                                        contract_address=self.contract_MoCState.price_provider())
+            self.contract_MoCMedianizer = MoCMedianizer(
+                network_manager,
+                contract_address=self.contract_MoCState.price_provider()).from_abi()
+            self.contract_splitter = CommissionSplitter(network_manager).from_abi()
         else:
             raise Exception("Not valid APP Mode")
-
-        self.tl = Timeloop()
 
     @staticmethod
     def aws_put_metric_heart_beat(value):
@@ -76,143 +126,235 @@ class JobsManager:
     def contract_liquidation(self):
 
         partial_execution_steps = self.options['tasks']['liquidation']['partial_execution_steps']
-        wait_timeout = self.options['tasks']['liquidation']['wait_timeout']
         gas_limit = self.options['tasks']['liquidation']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_liquidation(partial_execution_steps,
-                                                                    gas_limit=gas_limit,
-                                                                    wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_liquidation(
+            partial_execution_steps,
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: liquidation!")
+        log.info("Task :: liquidation :: OK")
 
     def contract_bucket_liquidation(self):
 
-        wait_timeout = self.options['tasks']['bucket_liquidation']['wait_timeout']
         gas_limit = self.options['tasks']['bucket_liquidation']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_bucket_liquidation(gas_limit=gas_limit,
-                                                                           wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_bucket_liquidation(
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: bucket liquidation!")
+        log.info("Task :: bucket liquidation :: OK")
 
     def contract_run_settlement(self):
 
         partial_execution_steps = self.options['tasks']['run_settlement']['partial_execution_steps']
-        wait_timeout = self.options['tasks']['run_settlement']['wait_timeout']
         gas_limit = self.options['tasks']['run_settlement']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_run_settlement(partial_execution_steps,
-                                                                       gas_limit=gas_limit,
-                                                                       wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_run_settlement(
+            partial_execution_steps,
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: runSettlement!")
+        log.info("Task :: runSettlement :: OK")
 
     def contract_daily_inrate_payment(self):
 
-        wait_timeout = self.options['tasks']['daily_inrate_payment']['wait_timeout']
         gas_limit = self.options['tasks']['daily_inrate_payment']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_daily_inrate_payment(gas_limit=gas_limit,
-                                                                             wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_daily_inrate_payment(
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: dailyInratePayment!")
+        log.info("Task :: dailyInratePayment :: OK")
+
+    def contract_splitter_split(self):
+
+        gas_limit = self.options['tasks']['splitter_split']['gas_limit']
+
+        log.info("Calling Splitter ...")
+
+        info_dict = dict()
+        info_dict['before'] = dict()
+        info_dict['after'] = dict()
+        info_dict['proportion'] = dict()
+
+        info_dict['proportion']['moc'] = 0.5
+        if self.app_mode == 'MoC':
+            info_dict['proportion']['moc'] = Web3.fromWei(self.contract_splitter.moc_proportion(), 'ether')
+
+        info_dict['proportion']['multisig'] = 1 - info_dict['proportion']['moc']
+
+        resume = str()
+
+        resume += "Splitter address: [{0}]\n".format(self.contract_splitter.address())
+        resume += "Multisig address: [{0}]\n".format(self.contract_splitter.commission_address())
+        resume += "MoC address: [{0}]\n".format(self.contract_splitter.moc_address())
+        resume += "Proportion MOC: [{0}]\n".format(info_dict['proportion']['moc'])
+        resume += "Proportion Multisig: [{0}]\n".format(info_dict['proportion']['multisig'])
+
+        resume += "BEFORE SPLIT:\n"
+        resume += "=============\n"
+
+        info_dict['before']['splitter'] = self.contract_splitter.balance()
+        resume += "Splitter balance: [{0}]\n".format(info_dict['before']['splitter'])
+
+        # balances commision
+        balance = Web3.fromWei(network_manager.network_balance(
+            self.contract_splitter.commission_address()), 'ether')
+        info_dict['before']['commission'] = balance
+        resume += "Multisig balance (proportion: {0}): [{1}]\n".format(info_dict['proportion']['multisig'],
+                                                                 info_dict['before']['commission'])
+
+        # balances moc
+        balance = Web3.fromWei(network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
+        info_dict['before']['moc'] = balance
+        resume += "MoC balance (proportion: {0}): [{1}]\n".format(
+            info_dict['proportion']['moc'],
+            info_dict['before']['moc'])
+
+        tx_receipt = self.contract_splitter.split(
+            gas_limit=gas_limit)
+
+        resume += "AFTER SPLIT:\n"
+        resume += "=============\n"
+
+        info_dict['after']['splitter'] = self.contract_splitter.balance()
+        dif = info_dict['after']['splitter'] - info_dict['before']['splitter']
+        resume += "Splitter balance: [{0}] Difference: [{1}]\n".format(info_dict['after']['splitter'], dif)
+
+        # balances commision
+        balance = Web3.fromWei(network_manager.network_balance(
+            self.contract_splitter.commission_address()), 'ether')
+        info_dict['after']['commission'] = balance
+        dif = info_dict['after']['commission'] - info_dict['before']['commission']
+        resume += "Multisig balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
+            info_dict['proportion']['multisig'],
+            info_dict['after']['commission'],
+            dif)
+
+        # balances moc
+        balance = Web3.fromWei(network_manager.network_balance(self.contract_splitter.moc_address()), 'ether')
+        info_dict['after']['moc'] = balance
+        dif = info_dict['after']['moc'] - info_dict['before']['moc']
+        resume += "MoC balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
+            info_dict['proportion']['moc'],
+            info_dict['after']['moc'],
+            dif)
+
+        if tx_receipt:
+            log.info(resume)
 
     def contract_pay_bitpro_holders(self):
 
-        wait_timeout = self.options['tasks']['pay_bitpro_holders']['wait_timeout']
         gas_limit = self.options['tasks']['pay_bitpro_holders']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_pay_bitpro_holders(gas_limit=gas_limit,
-                                                                           wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_pay_bitpro_holders(
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: payBitProHoldersInterestPayment!")
+        if tx_receipt:
+            self.contract_splitter_split()
+
+        log.info("Task :: payBitProHoldersInterestPayment :: OK")
 
     def contract_calculate_bma(self):
 
-        wait_timeout = self.options['tasks']['calculate_bma']['wait_timeout']
         gas_limit = self.options['tasks']['calculate_bma']['gas_limit']
 
-        tx_hash, tx_receipt = self.contract_MoC.execute_calculate_ema(gas_limit=gas_limit,
-                                                                      wait_timeout=wait_timeout)
+        tx_receipt = self.contract_MoC.execute_calculate_ema(
+            gas_limit=gas_limit)
 
-        if not tx_hash:
-            log.info("NO: calculateBitcoinMovingAverage!")
+        log.info("Task :: calculateBitcoinMovingAverage :: OK")
 
     def contract_oracle_poke(self):
 
-        wait_timeout = self.options['tasks']['oracle_poke']['wait_timeout']
         gas_limit = self.options['tasks']['oracle_poke']['gas_limit']
 
-        tx_hash = None
         tx_receipt = None
         if not self.contract_MoCMedianizer.compute()[1] and self.contract_MoCMedianizer.peek()[1]:
-            tx_hash, tx_receipt = self.contract_MoCMedianizer.poke(gas_limit=gas_limit,
-                                                                   wait_timeout=wait_timeout)
+            tx_receipt = self.contract_MoCMedianizer.poke(
+                gas_limit=gas_limit)
             log.error("[POKE] Not valid price! Disabling MOC Price!")
             self.aws_put_metric_heart_beat(1)
-        else:
-            log.info("NO: oracle Poke!")
+
+        log.info("Task :: oracle Poke :: OK")
+
+    def reconnect_on_lost_chain(self):
+
+        block = network_manager.block_number
+
+        if not self.last_block:
+            self.last_block = block
+            return
+
+        if block <= self.last_block:
+            # this means no new blocks from the last call,
+            # so this means a halt node, try to reconnect.
+
+            log.error("[ERROR BLOCKCHAIN CONNECT!] Same block from the last time! going to reconnect!")
+
+            # Raise exception
+            self.aws_put_metric_heart_beat(1)
+
+            # first disconnect
+            network_manager.disconnect()
+
+            # and then reconnect all again
+            self.connect()
+
+        log.info("Task :: Reconnect on lost chain :: OK :: Block height: {0} Block Height Current: {1}".format(
+            block, self.last_block))
+
+        # save the last block
+        self.last_block = block
+
+    def run_watch_exception(self, task_function):
+
+        try:
+            task_function()
+        except Exception as e:
+            log.error(e, exc_info=True)
+            self.aws_put_metric_heart_beat(1)
+
+    def task_reconnect_on_lost_chain(self):
+        """ Task reconnect when lost connection on chain """
+
+        self.run_watch_exception(self.reconnect_on_lost_chain)
 
     def task_run_settlement(self):
+        """ task run settlement"""
 
-        try:
-            self.contract_run_settlement()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_run_settlement)
 
     def task_liquidation(self):
+        """ task liquidation """
 
-        try:
-            self.contract_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_liquidation)
 
     def task_bucket_liquidation(self):
+        """ Task bucket liquidation """
 
-        try:
-            self.contract_bucket_liquidation()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_bucket_liquidation)
 
     def task_daily_inrate_payment(self):
+        """ task daily inrate payment """
 
-        try:
-            self.contract_daily_inrate_payment()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_daily_inrate_payment)
 
     def task_pay_bitpro_holders(self):
+        """ Task pay bitpro holders """
 
-        try:
-            self.contract_pay_bitpro_holders()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_pay_bitpro_holders)
 
     def task_calculate_bma(self):
+        """ Calculate bma """
 
-        try:
-            self.contract_calculate_bma()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_calculate_bma)
 
     def task_oracle_poke(self):
+        """ Oracle poke """
 
-        try:
-            self.contract_oracle_poke()
-        except Exception as e:
-            log.error(e, exc_info=True)
-            self.aws_put_metric_heart_beat(1)
+        self.run_watch_exception(self.contract_oracle_poke)
+
+    def task_splitter_split(self):
+        """ Task splitter split """
+
+        self.run_watch_exception(self.contract_splitter_split)
 
     def add_jobs(self):
 
@@ -220,6 +362,10 @@ class JobsManager:
 
         # creating the alarm
         self.aws_put_metric_heart_beat(0)
+
+        # Reconnect on lost chain
+        log.info("Jobs add reconnect on lost chain")
+        self.tl._add_job(self.task_reconnect_on_lost_chain, datetime.timedelta(seconds=180))
 
         # run_settlement
         if 'run_settlement' in self.options['tasks']:
@@ -263,6 +409,12 @@ class JobsManager:
             interval = self.options['tasks']['oracle_poke']['interval']
             self.tl._add_job(self.task_oracle_poke, datetime.timedelta(seconds=interval))
 
+        # Splitter split
+        # if 'splitter_split' in self.options['tasks']:
+        #     log.info("Jobs add Splitter split")
+        #     interval = self.options['tasks']['splitter_split']['interval']
+        #     self.tl._add_job(self.task_splitter_split, datetime.timedelta(seconds=interval))
+
     def time_loop_start(self):
 
         self.add_jobs()
@@ -274,6 +426,7 @@ class JobsManager:
             except KeyboardInterrupt:
                 self.tl.stop()
                 log.info("Shutting DOWN! TASKS")
+                network_manager.disconnect()
                 break
 
 
@@ -291,29 +444,65 @@ if __name__ == '__main__':
     usage = '%prog [options] '
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-n', '--network', action='store', dest='network', type="string", help='network')
+    parser.add_option('-n', '--connection_network', action='store', dest='connection_network', type="string",
+                      help='network to connect')
 
-    parser.add_option('-c', '--config', action='store', dest='config', type="string", help='config')
+    parser.add_option('-e', '--config_network', action='store', dest='config_network', type="string",
+                      help='enviroment to connect')
+
+    parser.add_option('-c', '--config', action='store', dest='config', type="string",
+                      help='path to config')
 
     (options, args) = parser.parse_args()
 
-    if 'MOC_JOBS_CONFIG' in os.environ:
-        config = json.loads(os.environ['MOC_JOBS_CONFIG'])
+    if 'APP_CONFIG' in os.environ:
+        config = json.loads(os.environ['APP_CONFIG'])
     else:
         if not options.config:
+            # if there are no config try to read config.json from current folder
             config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.json')
+            if not os.path.isfile(config_path):
+                raise Exception("Please select path to config or env APP_CONFIG. "
+                                "Ex. /enviroments/moc-testnet/config.json "
+                                "Full Ex.:"
+                                "python moc_jobs.py "
+                                "--connection_network=rskTestnetPublic "
+                                "--config_network=mocTestnet "
+                                "--config ./enviroments/moc-testnet/config.json"
+                                )
         else:
             config_path = options.config
 
         config = options_from_config(config_path)
 
-    if 'MOC_JOBS_NETWORK' in os.environ:
-        network = os.environ['MOC_JOBS_NETWORK']
+    if 'APP_CONNECTION_NETWORK' in os.environ:
+        connection_network = os.environ['APP_CONNECTION_NETWORK']
     else:
-        if not options.network:
-            network = 'mocTestnetAlpha'
+        if not options.connection_network:
+            raise Exception("Please select connection network or env APP_CONNECTION_NETWORK. "
+                            "Ex.: rskTesnetPublic. "
+                            "Full Ex.:"
+                            "python moc_jobs.py "
+                            "--connection_network=rskTestnetPublic "
+                            "--config_network=mocTestnet "
+                            "--config ./enviroments/moc-testnet/config.json")
         else:
-            network = options.network
+            connection_network = options.connection_network
 
-    jm = JobsManager(config, network)
+    if 'APP_CONFIG_NETWORK' in os.environ:
+        config_network = os.environ['APP_CONFIG_NETWORK']
+    else:
+        if not options.config_network:
+            raise Exception("Please select enviroment of your config or env APP_CONFIG_NETWORK. "
+                            "Ex.: rdocTestnetAlpha"
+                            "Full Ex.:"
+                            "python moc_jobs.py "
+                            "--connection_network=rskTestnetPublic "
+                            "--config_network=mocTestnet "
+                            "--config ./enviroments/moc-testnet/config.json"
+                            )
+        else:
+            config_network = options.config_network
+
+    jm = JobsManager(config, config_network, connection_network)
     jm.time_loop_start()

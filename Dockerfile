@@ -17,12 +17,21 @@ RUN echo $TZ > /etc/timezone && \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN brownie networks add RskNetwork rskTestnetPublic host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
+RUN brownie networks add RskNetwork rskTestnetPrivate host=http://moc-rsk-node-testnet.moneyonchain.com:4454 chainid=31 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
+RUN brownie networks add RskNetwork rskMainnetPublic host=https://public-node.rsk.co chainid=30 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
+RUN brownie networks add RskNetwork rskMainnetPrivate host=http://moc-rsk-node-mainnet.moneyonchain.com:4454 chainid=30 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
+
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
     && mkdir /home/www-data/app/moc_jobs
 
+ARG CONFIG=config.json
+
 WORKDIR /home/www-data/app/moc_jobs/
+COPY add_custom_network.sh ./
 COPY moc_jobs.py ./
-#COPY config.json ./
+ADD $CONFIG ./config.json
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
-CMD ["python", "./moc_jobs.py"]
+#CMD ["python", "./moc_jobs.py"]
+CMD /bin/bash -c 'bash ./add_custom_network.sh; python ./moc_jobs.py'

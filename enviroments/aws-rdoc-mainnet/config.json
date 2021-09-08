@@ -13,7 +13,7 @@
       "gas_limit": 3500000
     },
     "bucket_liquidation": {
-      "interval": 30,
+      "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
@@ -33,20 +33,25 @@
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
+    "oracle_poke": {
+      "interval": 120,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
     "splitter_split": {
       "interval": 72,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }
   },
-  "timeout": 30,
+  "timeout": 60,
   "networks": {
-    "rdocTestnet": {
+    "rdocMainnet": {
       "app_mode": "RRC20",
-      "gas_price": 68000000,
+      "gas_price": 60000001,
       "addresses": {
-        "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
-        "CommissionSplitter": "0x5aF95c49461ef2bE429CD84aDe50867ff5A20fB6"
+        "MoC": "0xCfF3fcaeC2352C672C38d77cb1a064B7D50ce7e1",
+        "CommissionSplitter": "0xaC7dE98a426F6FF51e1Bd6588b41544C8Addb2D1"
       }
 
     }

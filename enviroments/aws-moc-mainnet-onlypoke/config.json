@@ -10,7 +10,7 @@
   "networks": {
     "mocMainnet2": {
       "app_mode": "MoC",
-      "gas_price": 60000000,
+      "gas_price": 60000001,
       "addresses": {
         "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
         "CommissionSplitter": "0xa5467535851263122ef1476e24C529CFc6CFc086"
