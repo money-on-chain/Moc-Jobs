@@ -19,22 +19,22 @@
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 60,
+      "interval": 25,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 65,
+      "interval": 25,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 72,
+      "interval": 30,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "oracle_poke": {
-      "interval": 120,
+      "interval": 30,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
@@ -53,9 +53,6 @@
         "MoC": "0xCfF3fcaeC2352C672C38d77cb1a064B7D50ce7e1",
         "CommissionSplitter": "0xaC7dE98a426F6FF51e1Bd6588b41544C8Addb2D1"
       }
-
     }
-
   }
-
 }

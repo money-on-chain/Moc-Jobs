@@ -19,17 +19,17 @@
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 60,
+      "interval": 25,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 65,
+      "interval": 30,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 72,
+      "interval": 35,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
