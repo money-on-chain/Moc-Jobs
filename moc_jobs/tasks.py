@@ -317,7 +317,7 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
         return
 
     if 'commission_splitter_confirm_block' in global_manager:
-        commission_splitter_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
+        commission_splitter_confirm_block = global_manager['commission_splitter_confirm_block']
     else:
         commission_splitter_confirm_block = 0
 
