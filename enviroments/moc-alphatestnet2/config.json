@@ -34,7 +34,7 @@
       "gas_limit": 2000000
     },
     "splitter_split": {
-      "interval": 40,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }

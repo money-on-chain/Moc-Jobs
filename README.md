@@ -13,7 +13,7 @@ run async of the app, and call directly to the contract througth node.
  5. Contract pay bitpro holders
  6. Contract calculate EMA
  7. Oracle Compute: Check expiration of price in Oracle.
- 8. Execute Commision splitter
+ 8. Execute Commission splitter
  
  
 ### Usage
