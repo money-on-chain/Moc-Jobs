@@ -25,7 +25,7 @@ def signal_handler(signum, frame):
 
 
 class Task:
-    def __init__(self, func, args=None, kwargs=None, wait=1, timeout=180):
+    def __init__(self, func, args=None, kwargs=None, wait=1, timeout=180, task_name='Task N'):
         self.func = func
         if args:
             self.args = args
@@ -41,6 +41,9 @@ class Task:
         self.result = None
         self.shutdown = False
         self.last_run = datetime.datetime.now()
+        self.tx_receipt = None
+        self.tx_receipt_timestamp = None
+        self.task_name = task_name
 
 
 class TasksManager:
@@ -51,12 +54,12 @@ class TasksManager:
         self.max_tasks = 1
         self.timeout = 180
 
-    def add_task(self, func, args=None, kwargs=None, wait=1, timeout=180, tid=None):
+    def add_task(self, func, args=None, kwargs=None, wait=1, timeout=180, tid=None, task_name='Task N'):
 
         if not tid:
             tid = uuid.uuid4()
 
-        task = Task(func, args=args, kwargs=kwargs, wait=wait, timeout=timeout)
+        task = Task(func, args=args, kwargs=kwargs, wait=wait, timeout=timeout, task_name=task_name)
         self.tasks[tid] = task
 
     def on_task_done(self, future, task=None):
@@ -67,6 +70,10 @@ class TasksManager:
                 if 'shutdown' in task.result:
                     if task.result['shutdown']:
                         task.shutdown = True
+                elif 'receipt' in task.result:
+                    if 'id' in task.result['receipt']:
+                        task.tx_receipt = task.result['receipt']['id']
+                        task.tx_receipt_timestamp = task.result['receipt']['timestamp']
         except TimeoutError as e:
             log.info("Function took longer than %d seconds. Task going to cancel!" % e.args[1])
             aws_put_metric_heart_beat(1)
