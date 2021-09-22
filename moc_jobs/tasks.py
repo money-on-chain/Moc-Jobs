@@ -19,6 +19,8 @@ __VERSION__ = '2.3.1'
 BUCKET_X2 = '0x5832000000000000000000000000000000000000000000000000000000000000'
 BUCKET_C0 = '0x4330000000000000000000000000000000000000000000000000000000000000'
 
+last_pay_bitpro_holder_block = 0
+
 log.info("Starting MoC Jobs version {0}".format(__VERSION__))
 
 
@@ -116,6 +118,12 @@ def save_pending_tx_receipt(tx_receipt, task_name):
 
     result = dict()
     result['receipt'] = dict()
+
+    if tx_receipt is None:
+        result['receipt']['id'] = None
+        result['receipt']['timestamp'] = None
+        return result
+
     result['receipt']['id'] = tx_receipt.txid
     result['receipt']['timestamp'] = datetime.datetime.now()
 
@@ -148,10 +156,14 @@ def pending_transaction_receipt(task):
             result['receipt']['id'] = None
             result['receipt']['timestamp'] = None
 
+            log.info("Task :: {0} :: Confirmed tx!".format(task.task_name))
+            tx_rcp.info()
+            receipt_to_log(tx_rcp, log)
+
     return result
 
 
-def task_contract_liquidation(options, contracts_addresses, task=None):
+def task_contract_liquidation(options, contracts_addresses, task=None, global_manager=None):
 
     partial_execution_steps = options['tasks']['liquidation']['partial_execution_steps']
     gas_limit = options['tasks']['liquidation']['gas_limit']
@@ -185,9 +197,10 @@ def task_contract_liquidation(options, contracts_addresses, task=None):
         return save_pending_tx_receipt(tx_receipt, task.task_name)
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_bucket_liquidation(options, contracts_addresses, task=None):
+def task_contract_bucket_liquidation(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['bucket_liquidation']['gas_limit']
     moc_address = contracts_addresses['MoC']
@@ -218,9 +231,10 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None):
         return save_pending_tx_receipt(tx_receipt, task.task_name)
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_run_settlement(options, contracts_addresses, task=None):
+def task_contract_run_settlement(options, contracts_addresses, task=None, global_manager=None):
 
     partial_execution_steps = options['tasks']['run_settlement']['partial_execution_steps']
     gas_limit = options['tasks']['run_settlement']['gas_limit']
@@ -252,9 +266,10 @@ def task_contract_run_settlement(options, contracts_addresses, task=None):
 
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_daily_inrate_payment(options, contracts_addresses, task=None):
+def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['daily_inrate_payment']['gas_limit']
     moc_address = contracts_addresses['MoC']
@@ -283,24 +298,46 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None):
 
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_splitter_split(options, contracts_addresses, task=None):
+def task_contract_splitter_split(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['splitter_split']['gas_limit']
     app_mode = options['networks'][network_manager.config_network]['app_mode']
     splitter_address = options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
-    task_name = '8. Commission Splitter'
+
+    if 'pay_bitpro_holders_confirm_block' not in global_manager:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
+
+    pay_bitpro_holders_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
+    if pay_bitpro_holders_confirm_block <= 0:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
+
+    if 'commission_splitter_confirm_block' in global_manager:
+        commission_splitter_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
+    else:
+        commission_splitter_confirm_block = 0
+
+    if pay_bitpro_holders_confirm_block > commission_splitter_confirm_block:
+        pass
+    else:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
         if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task_name))
-            return pending_tx_receipt
+            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        else:
+            global_manager['commission_splitter_confirm_block'] = network_manager.block_number
+        return pending_tx_receipt
 
     if pending_queue_is_full():
-        log.error("Task :: {0} :: Pending queue is full".format(task_name))
+        log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
         aws_put_metric_heart_beat(1)
         return
 
@@ -377,10 +414,12 @@ def task_contract_splitter_split(options, contracts_addresses, task=None):
     if tx_receipt:
         log.info(resume)
 
-    return save_pending_tx_receipt(tx_receipt, task_name)
+    #global_manager['pay_bitpro_holders_confirm_block'] = 0
+
+    return save_pending_tx_receipt(tx_receipt, task.task_name)
 
 
-def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None):
+def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['pay_bitpro_holders']['gas_limit']
     app_mode = options['networks'][network_manager.config_network]['app_mode']
@@ -393,8 +432,7 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None):
             log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
             return pending_tx_receipt
         else:
-            # if confirmed then send splitter execute
-            return task_contract_splitter_split(options, contracts_addresses, task=task)
+            global_manager['pay_bitpro_holders_confirm_block'] = network_manager.block_number
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
 
@@ -416,9 +454,10 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None):
 
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_calculate_bma(options, contracts_addresses, task=None):
+def task_contract_calculate_bma(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['calculate_bma']['gas_limit']
     moc_state_address = contracts_addresses['MoCState']
@@ -451,9 +490,10 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None):
 
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_oracle_poke(options, contracts_addresses, task=None):
+def task_contract_oracle_poke(options, contracts_addresses, task=None, global_manager=None):
 
     gas_limit = options['tasks']['oracle_poke']['gas_limit']
     medianizer_address = contracts_addresses['PriceProvider']
@@ -483,9 +523,10 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None):
         return save_pending_tx_receipt(tx_receipt, task.task_name)
     else:
         log.info("Task :: {0} :: No!".format(task.task_name))
+        return save_pending_tx_receipt(None, task.task_name)
 
 
-def reconnect_on_lost_chain(task=None):
+def reconnect_on_lost_chain(task=None, global_manager=None):
 
     # get las block query last time from task result of the run last time task
     if task.result:
@@ -609,12 +650,12 @@ class MoCTasks(TasksManager):
         aws_put_metric_heart_beat(0)
 
         # Reconnect on lost chain
-        log.info("Jobs add reconnect on lost chain")
+        log.info("Jobs add: 99. Reconnect on lost chain")
         self.add_task(reconnect_on_lost_chain, args=[], wait=180, timeout=180)
 
         # run_settlement
         if 'run_settlement' in self.options['tasks']:
-            log.info("Jobs add run_settlement")
+            log.info("Jobs add: 3. Run Settlement")
             interval = self.options['tasks']['run_settlement']['interval']
             self.add_task(task_contract_run_settlement,
                           args=[self.options, self.contract_addresses],
@@ -624,7 +665,7 @@ class MoCTasks(TasksManager):
 
         # liquidation
         if 'liquidation' in self.options['tasks']:
-            log.info("Jobs add liquidation")
+            log.info("Jobs add: 1. Liquidation")
             interval = self.options['tasks']['liquidation']['interval']
             self.add_task(task_contract_liquidation,
                           args=[self.options, self.contract_addresses],
@@ -634,7 +675,7 @@ class MoCTasks(TasksManager):
 
         # bucket_liquidation
         if 'bucket_liquidation' in self.options['tasks']:
-            log.info("Jobs add bucket_liquidation")
+            log.info("Jobs add: 2. Bucket Liquidation")
             interval = self.options['tasks']['bucket_liquidation']['interval']
             self.add_task(task_contract_bucket_liquidation,
                           args=[self.options, self.contract_addresses],
@@ -644,7 +685,7 @@ class MoCTasks(TasksManager):
 
         # daily_inrate_payment
         if 'daily_inrate_payment' in self.options['tasks']:
-            log.info("Jobs add daily_inrate_payment")
+            log.info("Jobs add: 4. Daily Inrate Payment")
             interval = self.options['tasks']['daily_inrate_payment']['interval']
             self.add_task(task_contract_daily_inrate_payment,
                           args=[self.options, self.contract_addresses],
@@ -654,7 +695,7 @@ class MoCTasks(TasksManager):
 
         # pay_bitpro_holders
         if 'pay_bitpro_holders' in self.options['tasks']:
-            log.info("Jobs add pay_bitpro_holders")
+            log.info("Jobs add: 5. Pay Bitpro Holders")
             interval = self.options['tasks']['pay_bitpro_holders']['interval']
             self.add_task(task_contract_pay_bitpro_holders,
                           args=[self.options, self.contract_addresses],
@@ -664,7 +705,7 @@ class MoCTasks(TasksManager):
 
         # calculate_bma
         if 'calculate_bma' in self.options['tasks']:
-            log.info("Jobs add calculate_bma")
+            log.info("Jobs add: 6. Calculate EMA")
             interval = self.options['tasks']['calculate_bma']['interval']
             self.add_task(task_contract_calculate_bma,
                           args=[self.options, self.contract_addresses],
@@ -674,7 +715,7 @@ class MoCTasks(TasksManager):
 
         # Oracle Poke
         if 'oracle_poke' in self.options['tasks']:
-            log.info("Jobs add oracle poke")
+            log.info("Jobs add: 7. Oracle Compute")
             interval = self.options['tasks']['oracle_poke']['interval']
             self.add_task(task_contract_oracle_poke,
                           args=[self.options, self.contract_addresses],
@@ -682,14 +723,15 @@ class MoCTasks(TasksManager):
                           timeout=180,
                           task_name='7. Oracle Compute')
 
-        # # Splitter split
-        # if 'splitter_split' in self.options['tasks']:
-        #     log.info("Jobs add Splitter split")
-        #     interval = self.options['tasks']['splitter_split']['interval']
-        #     self.add_task(task_contract_splitter_split,
-        #                   args=[self.options, self.contract_addresses],
-        #                   wait=interval,
-        #                   timeout=180, task_name='8. Execute Commission splitter')
+        # Splitter split
+        if 'splitter_split' in self.options['tasks']:
+            log.info("Jobs add: 8. Commission splitter")
+            interval = self.options['tasks']['splitter_split']['interval']
+            self.add_task(task_contract_splitter_split,
+                          args=[self.options, self.contract_addresses],
+                          wait=interval,
+                          timeout=180,
+                          task_name='8. Commission splitter')
 
         # Set max workers
         self.max_tasks = len(self.tasks)

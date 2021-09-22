@@ -4,6 +4,7 @@ import functools
 import uuid
 from concurrent.futures import TimeoutError
 import datetime
+from multiprocessing import Manager
 
 from pebble import ProcessPool, sighandler, ProcessExpired, ThreadPool
 
@@ -91,7 +92,7 @@ class TasksManager:
         task.last_run = datetime.datetime.now()
         task.running = False
 
-    def schedule_task(self, pool, task):
+    def schedule_task(self, pool, task, global_manager=None):
 
         if not task.running:
             # shutdown task manager!
@@ -101,19 +102,21 @@ class TasksManager:
                 task.running = True
                 # pass task object as vars to run funtion
                 task.kwargs["task"] = task
+                task.kwargs["global_manager"] = global_manager
                 future = pool.schedule(task.func, args=task.args, kwargs=task.kwargs, timeout=task.timeout)
                 future.add_done_callback(functools.partial(self.on_task_done, task=task))
 
     def start_loop(self):
 
         log.info("Start Task jobs loop")
+        global_manager = Manager().dict()
 
         with ProcessPool(max_workers=self.max_workers, max_tasks=self.max_tasks) as pool:
             try:
                 while True:
                     if self.tasks:
                         for key in self.tasks:
-                            self.schedule_task(pool, self.tasks[key])
+                            self.schedule_task(pool, self.tasks[key], global_manager=global_manager)
                     sleep(1)
             except TerminateSignal:
                 log.info("Terminal Signal received... Going to shutdown... stop pooling now!")
