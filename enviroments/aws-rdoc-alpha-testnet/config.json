@@ -7,29 +7,29 @@
       "gas_limit": 3500000
     },
     "liquidation": {
-      "interval": 20,
+      "interval": 25,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
     },
     "bucket_liquidation": {
-      "interval": 20,
+      "interval": 35,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 3500000
     },
     "daily_inrate_payment": {
-      "interval": 25,
+      "interval": 40,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 30,
+      "interval": 42,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 30,
+      "interval": 45,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },

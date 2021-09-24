@@ -157,8 +157,12 @@ def pending_transaction_receipt(task):
             result['receipt']['timestamp'] = None
 
             log.info("Task :: {0} :: Confirmed tx!".format(task.task_name))
-            tx_rcp.info()
-            receipt_to_log(tx_rcp, log)
+
+            try:
+                tx_rcp.info()
+                receipt_to_log(tx_rcp, log)
+            except:
+                log.error("Task :: {0} :: Error getting info receipt!".format(task.task_name))
 
     return result
 
