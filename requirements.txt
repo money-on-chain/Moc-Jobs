@@ -1,4 +1,4 @@
-web3==5.23.1
+web3==5.23.0
 eth-brownie==1.14.6
 boto3
 moneyonchain==2.0.39
