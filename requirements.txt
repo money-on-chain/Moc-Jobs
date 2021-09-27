@@ -1,5 +1,5 @@
-web3==5.18.0
+web3==5.23.1
 eth-brownie==1.14.6
 boto3
-moneyonchain==2.0.34
+moneyonchain==2.0.39
 pebble
