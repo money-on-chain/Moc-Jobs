@@ -653,6 +653,9 @@ class MoCTasks(TasksManager):
         # creating the alarm
         aws_put_metric_heart_beat(0)
 
+        # set max workers
+        self.max_workers = 1
+
         # Reconnect on lost chain
         log.info("Jobs add: 99. Reconnect on lost chain")
         self.add_task(reconnect_on_lost_chain, args=[], wait=180, timeout=180)
