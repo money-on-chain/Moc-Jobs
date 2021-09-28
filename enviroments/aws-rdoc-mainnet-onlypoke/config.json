@@ -1,7 +1,7 @@
 {
   "tasks": {
     "oracle_poke": {
-      "interval": 30,
+      "interval": 40,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }
