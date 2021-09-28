@@ -14,12 +14,11 @@ from .logger import log
 from .utils import aws_put_metric_heart_beat
 
 
-__VERSION__ = '2.3.1'
+__VERSION__ = '2.3.2'
 
 BUCKET_X2 = '0x5832000000000000000000000000000000000000000000000000000000000000'
 BUCKET_C0 = '0x4330000000000000000000000000000000000000000000000000000000000000'
 
-last_pay_bitpro_holder_block = 0
 
 log.info("Starting MoC Jobs version {0}".format(__VERSION__))
 
@@ -417,8 +416,6 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
 
     if tx_receipt:
         log.info(resume)
-
-    #global_manager['pay_bitpro_holders_confirm_block'] = 0
 
     return save_pending_tx_receipt(tx_receipt, task.task_name)
 
