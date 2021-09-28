@@ -10,13 +10,13 @@
       "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
-      "gas_limit": 3500000
+      "gas_limit": 4500000
     },
     "bucket_liquidation": {
       "interval": 20,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
-      "gas_limit": 3500000
+      "gas_limit": 4500000
     },
     "daily_inrate_payment": {
       "interval": 20,

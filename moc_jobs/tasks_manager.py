@@ -51,7 +51,7 @@ class TasksManager:
 
     def __init__(self):
         self.tasks = dict()
-        self.max_workers = 2
+        self.max_workers = 1
         self.max_tasks = 1
         self.timeout = 180
 
