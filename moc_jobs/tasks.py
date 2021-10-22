@@ -1,6 +1,6 @@
 import datetime
 
-from web3 import Web3
+from web3 import Web3, exceptions
 
 from moneyonchain.networks import network_manager, web3, chain
 from moneyonchain.moc import MoC, CommissionSplitter, MoCConnector, MoCState
@@ -138,7 +138,20 @@ def pending_transaction_receipt(task):
     if task.tx_receipt:
         result['receipt'] = dict()
         result['receipt']['confirmed'] = False
-        tx_rcp = chain.get_transaction(task.tx_receipt)
+
+        try:
+            tx_rcp = chain.get_transaction(task.tx_receipt)
+        except exceptions.TransactionNotFound:
+            # Transaction not exist anymore, blockchain reorder?
+            # timeout and permit to send again transaction
+            result['receipt']['id'] = None
+            result['receipt']['timestamp'] = None
+            result['receipt']['confirmed'] = True
+
+            log.error("Task :: {0} :: Transaction not found! {1}".format(task.task_name, task.tx_receipt))
+
+            return result
+
         # pending state
         if tx_rcp.confirmations < 1 and tx_rcp.status < 0:
             elapsed = datetime.datetime.now() - task.tx_receipt_timestamp
@@ -508,7 +521,8 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None, global_ma
 
     contract_medianizer = get_contract_medianizer(options, medianizer_address=medianizer_address)
 
-    if not contract_medianizer.compute()[1] and contract_medianizer.peek()[1]:
+    price_validity = contract_medianizer.peek()[1]
+    if not contract_medianizer.compute()[1] and price_validity:
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -517,14 +531,19 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None, global_ma
 
         tx_args = contract_medianizer.tx_arguments(gas_limit=gas_limit, required_confs=0)
 
-        tx_receipt = contract_medianizer.poke(tx_args)
-        log.error("Task :: {0} :: Not valid price! Disabling MOC Price!".format(task.task_name))
+        tx_receipt = contract_medianizer.sc.poke(tx_args)
+        log.error("Task :: {0} :: Not valid price! Disabling Price!".format(task.task_name))
         aws_put_metric_heart_beat(1)
 
         return save_pending_tx_receipt(tx_receipt, task.task_name)
-    else:
-        log.info("Task :: {0} :: No!".format(task.task_name))
-        return save_pending_tx_receipt(None, task.task_name)
+
+    # if no valid price in oracle please send alarm
+    if not price_validity:
+        log.error("Task :: {0} :: No valid price in oracle!".format(task.task_name))
+        aws_put_metric_heart_beat(1)
+
+    log.info("Task :: {0} :: No!".format(task.task_name))
+    return save_pending_tx_receipt(None, task.task_name)
 
 
 def reconnect_on_lost_chain(task=None, global_manager=None):
