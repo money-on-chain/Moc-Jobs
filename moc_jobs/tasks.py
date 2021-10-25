@@ -134,10 +134,13 @@ def save_pending_tx_receipt(tx_receipt, task_name):
 def pending_transaction_receipt(task):
     """ Wait to pending receipt get confirmed"""
 
+    timeout_reverted = 3600
+
     result = dict()
     if task.tx_receipt:
         result['receipt'] = dict()
         result['receipt']['confirmed'] = False
+        result['receipt']['reverted'] = False
 
         try:
             tx_rcp = chain.get_transaction(task.tx_receipt)
@@ -153,7 +156,42 @@ def pending_transaction_receipt(task):
             return result
 
         # pending state
-        if tx_rcp.confirmations < 1 and tx_rcp.status < 0:
+        # Status:
+        #    Dropped = -2
+        #    Pending = -1
+        #    Reverted = 0
+        #    Confirmed = 1
+
+        # confirmed state
+        if tx_rcp.confirmations >= 1 and tx_rcp.status == 1:
+
+            result['receipt']['confirmed'] = True
+            result['receipt']['id'] = None
+            result['receipt']['timestamp'] = None
+
+            log.info("Task :: {0} :: Confirmed tx! [{1}]".format(task.task_name, task.tx_receipt))
+
+        # reverted
+        elif tx_rcp.confirmations >= 1 and tx_rcp.status == 0:
+
+            result['receipt']['confirmed'] = True
+            result['receipt']['reverted'] = True
+
+            elapsed = datetime.datetime.now() - task.tx_receipt_timestamp
+            timeout = datetime.timedelta(seconds=timeout_reverted)
+
+            log.error("Task :: {0} :: Reverted tx! [{1}] Elapsed: [{2}] Timeout: [{3}]".format(
+                task.task_name, task.tx_receipt, elapsed.seconds, timeout_reverted))
+
+            if elapsed > timeout:
+                # timeout allow to send again transaction on reverted
+                result['receipt']['id'] = None
+                result['receipt']['timestamp'] = None
+                result['receipt']['confirmed'] = True
+
+                log.error("Task :: {0} :: Timeout Reverted tx! [{1}]".format(task.task_name, task.tx_receipt))
+
+        elif tx_rcp.confirmations < 1 and tx_rcp.status < 0:
             elapsed = datetime.datetime.now() - task.tx_receipt_timestamp
             timeout = datetime.timedelta(seconds=task.timeout)
 
@@ -162,19 +200,10 @@ def pending_transaction_receipt(task):
                 result['receipt']['id'] = None
                 result['receipt']['timestamp'] = None
                 result['receipt']['confirmed'] = True
-        else:
-            # confirmed state
-            result['receipt']['confirmed'] = True
-            result['receipt']['id'] = None
-            result['receipt']['timestamp'] = None
 
-            log.info("Task :: {0} :: Confirmed tx!".format(task.task_name))
-
-            try:
-                tx_rcp.info()
-                receipt_to_log(tx_rcp, log)
-            except:
-                log.error("Task :: {0} :: Error getting info receipt!".format(task.task_name))
+                log.error("Task :: {0} :: Timeout tx! [{1}]".format(task.task_name, task.tx_receipt))
+            else:
+                log.info("Task :: {0} :: Pending tx state ... [{1}]".format(task.task_name, task.tx_receipt))
 
     return result
 
@@ -189,8 +218,8 @@ def task_contract_liquidation(options, contracts_addresses, task=None, global_ma
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
@@ -204,6 +233,12 @@ def task_contract_liquidation(options, contracts_addresses, task=None, global_ma
             return
 
         tx_args = contract_moc.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        estimate_gas = contract_moc.sc.evalLiquidation.estimate_gas(partial_execution_steps, tx_args)
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         # Only if is liquidation reach
         tx_receipt = contract_moc.sc.evalLiquidation(
@@ -224,8 +259,8 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None, gl
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
@@ -238,6 +273,12 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None, gl
             return
 
         tx_args = contract_moc.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        estimate_gas = contract_moc.sc.evalBucketLiquidation.estimate_gas(BUCKET_X2, tx_args)
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         # Only if is liquidation reach
         tx_receipt = contract_moc.sc.evalBucketLiquidation(
@@ -259,8 +300,8 @@ def task_contract_run_settlement(options, contracts_addresses, task=None, global
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
@@ -273,6 +314,12 @@ def task_contract_run_settlement(options, contracts_addresses, task=None, global
             return
 
         tx_args = contract_moc.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        estimate_gas = contract_moc.sc.runSettlement.estimate_gas(partial_execution_steps, tx_args)
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         tx_receipt = contract_moc.sc.runSettlement(
             partial_execution_steps,
@@ -293,8 +340,8 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
@@ -307,6 +354,12 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, 
             return
 
         tx_args = contract_moc.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        estimate_gas = contract_moc.sc.dailyInratePayment.estimate_gas(tx_args)
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         tx_receipt = contract_moc.sc.dailyInratePayment(tx_args)
 
@@ -346,8 +399,9 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
+            return pending_tx_receipt
         else:
             global_manager['commission_splitter_confirm_block'] = network_manager.block_number
         return pending_tx_receipt
@@ -399,6 +453,13 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
         info_dict['before']['moc'])
 
     tx_args = contract_splitter.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+    estimate_gas = contract_splitter.sc.split.estimate_gas(tx_args)
+    if estimate_gas > gas_limit:
+        log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+        aws_put_metric_heart_beat(1)
+        return
+
     tx_receipt = contract_splitter.sc.split(tx_args)
 
     resume += "AFTER SPLIT:\n"
@@ -442,8 +503,8 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, gl
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
         else:
             global_manager['pay_bitpro_holders_confirm_block'] = network_manager.block_number
@@ -458,6 +519,16 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, gl
             return
 
         tx_args = contract_moc.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        if app_mode == 'MoC':
+            estimate_gas = contract_moc.sc.payBitProHoldersInterestPayment.estimate_gas(tx_args)
+        else:
+            estimate_gas = contract_moc.sc.payRiskProHoldersInterestPayment.estimate_gas(tx_args)
+
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         if app_mode == 'MoC':
             tx_receipt = contract_moc.sc.payBitProHoldersInterestPayment(tx_args)
@@ -480,8 +551,8 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None, global_
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_moc_state = get_contract_moc_state(options, moc_state_address=moc_state_address)
@@ -494,6 +565,16 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None, global_
             return
 
         tx_args = contract_moc_state.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        if app_mode == 'MoC':
+            estimate_gas = contract_moc_state.sc.calculateBitcoinMovingAverage.estimate_gas(tx_args)
+        else:
+            estimate_gas = contract_moc_state.sc.calculateReserveTokenMovingAverage.estimate_gas(tx_args)
+
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         if app_mode == 'MoC':
             tx_receipt = contract_moc_state.sc.calculateBitcoinMovingAverage(tx_args)
@@ -515,8 +596,8 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None, global_ma
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
-        if not pending_tx_receipt['receipt']['confirmed']:
-            log.info("Task :: {0} :: Pending tx state ...".format(task.task_name))
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
             return pending_tx_receipt
 
     contract_medianizer = get_contract_medianizer(options, medianizer_address=medianizer_address)
@@ -530,6 +611,12 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None, global_ma
             return
 
         tx_args = contract_medianizer.tx_arguments(gas_limit=gas_limit, required_confs=0)
+
+        estimate_gas = contract_medianizer.sc.poke.estimate_gas(tx_args)
+        if estimate_gas > gas_limit:
+            log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+            aws_put_metric_heart_beat(1)
+            return
 
         tx_receipt = contract_medianizer.sc.poke(tx_args)
         log.error("Task :: {0} :: Not valid price! Disabling Price!".format(task.task_name))
