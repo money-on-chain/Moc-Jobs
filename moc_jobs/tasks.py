@@ -14,7 +14,7 @@ from .logger import log
 from .utils import aws_put_metric_heart_beat
 
 
-__VERSION__ = '2.3.4'
+__VERSION__ = '2.3.5'
 
 BUCKET_X2 = '0x5832000000000000000000000000000000000000000000000000000000000000'
 BUCKET_C0 = '0x4330000000000000000000000000000000000000000000000000000000000000'
@@ -225,7 +225,7 @@ def task_contract_liquidation(options, contracts_addresses, task=None, global_ma
     contract_moc = get_contract_moc(options, moc_address=moc_address)
     contract_moc_state = get_contract_moc_state(options, moc_state_address=moc_state_address)
 
-    if contract_moc_state.is_liquidation():
+    if contract_moc_state.sc.isLiquidationReached():
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -265,7 +265,7 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None, gl
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
 
-    if contract_moc.is_bucket_liquidation() and not contract_moc.is_settlement_enabled():
+    if contract_moc.sc.isBucketLiquidationReached(BUCKET_X2) and not contract_moc.sc.isSettlementEnabled():
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -306,7 +306,7 @@ def task_contract_run_settlement(options, contracts_addresses, task=None, global
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
 
-    if contract_moc.is_settlement_enabled():
+    if contract_moc.sc.isSettlementEnabled():
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -346,7 +346,7 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, 
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
 
-    if contract_moc.is_daily_enabled():
+    if contract_moc.sc.isDailyEnabled():
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -511,7 +511,12 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, gl
 
     contract_moc = get_contract_moc(options, moc_address=moc_address)
 
-    if contract_moc.is_bitpro_interest_enabled():
+    if app_mode == 'MoC':
+        is_bitpro_interest_enabled = contract_moc.sc.isBitProInterestEnabled()
+    else:
+        is_bitpro_interest_enabled = contract_moc.sc.isRiskProInterestEnabled()
+
+    if is_bitpro_interest_enabled:
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -557,7 +562,7 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None, global_
 
     contract_moc_state = get_contract_moc_state(options, moc_state_address=moc_state_address)
 
-    if contract_moc_state.is_calculate_ema():
+    if contract_moc_state.sc.shouldCalculateEma():
 
         if pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
