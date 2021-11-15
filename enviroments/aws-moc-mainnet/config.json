@@ -33,11 +33,6 @@
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
-    "oracle_poke": {
-      "interval": 40,
-      "wait_timeout": 240,
-      "gas_limit": 2000000
-    },
     "splitter_split": {
       "interval": 72,
       "wait_timeout": 240,
