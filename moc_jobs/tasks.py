@@ -6,6 +6,7 @@ from moneyonchain.networks import network_manager, web3, chain
 from moneyonchain.moc import MoC, CommissionSplitter, MoCConnector, MoCState
 from moneyonchain.rdoc import RDOCMoC, RDOCCommissionSplitter, RDOCMoCConnector, RDOCMoCState
 from moneyonchain.medianizer import MoCMedianizer, RDOCMoCMedianizer
+from moneyonchain.multicall import Multicall2
 from moneyonchain.transaction import receipt_to_log
 
 
@@ -14,7 +15,7 @@ from .logger import log
 from .utils import aws_put_metric_heart_beat
 
 
-__VERSION__ = '2.3.5'
+__VERSION__ = '2.3.6'
 
 BUCKET_X2 = '0x5832000000000000000000000000000000000000000000000000000000000000'
 BUCKET_C0 = '0x4330000000000000000000000000000000000000000000000000000000000000'
@@ -208,12 +209,12 @@ def pending_transaction_receipt(task):
     return result
 
 
-def task_contract_liquidation(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_liquidation(options, contracts_loaded, task=None, global_manager=None):
 
     partial_execution_steps = options['tasks']['liquidation']['partial_execution_steps']
     gas_limit = options['tasks']['liquidation']['gas_limit']
-    moc_address = contracts_addresses['MoC']
-    moc_state_address = contracts_addresses['MoCState']
+    #moc_address = contracts_addresses['MoC']
+    #moc_state_address = contracts_addresses['MoCState']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -222,8 +223,8 @@ def task_contract_liquidation(options, contracts_addresses, task=None, global_ma
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_moc = get_contract_moc(options, moc_address=moc_address)
-    contract_moc_state = get_contract_moc_state(options, moc_state_address=moc_state_address)
+    contract_moc = contracts_loaded["MoC"]  # get_contract_moc(options, moc_address=moc_address)
+    contract_moc_state = contracts_loaded["MoCState"]  # get_contract_moc_state(options, moc_state_address=moc_state_address)
 
     if contract_moc_state.sc.isLiquidationReached():
 
@@ -251,10 +252,10 @@ def task_contract_liquidation(options, contracts_addresses, task=None, global_ma
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_bucket_liquidation(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_bucket_liquidation(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['bucket_liquidation']['gas_limit']
-    moc_address = contracts_addresses['MoC']
+    #moc_address = contracts_addresses['MoC']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -263,7 +264,7 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None, gl
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_moc = get_contract_moc(options, moc_address=moc_address)
+    contract_moc = contracts_loaded["MoC"]  # get_contract_moc(options, moc_address=moc_address)
 
     if contract_moc.sc.isBucketLiquidationReached(BUCKET_X2) and not contract_moc.sc.isSettlementEnabled():
 
@@ -291,11 +292,11 @@ def task_contract_bucket_liquidation(options, contracts_addresses, task=None, gl
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_run_settlement(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_run_settlement(options, contracts_loaded, task=None, global_manager=None):
 
     partial_execution_steps = options['tasks']['run_settlement']['partial_execution_steps']
     gas_limit = options['tasks']['run_settlement']['gas_limit']
-    moc_address = contracts_addresses['MoC']
+    #moc_address = contracts_addresses['MoC']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -304,7 +305,7 @@ def task_contract_run_settlement(options, contracts_addresses, task=None, global
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_moc = get_contract_moc(options, moc_address=moc_address)
+    contract_moc = contracts_loaded["MoC"]  # get_contract_moc(options, moc_address=moc_address)
 
     if contract_moc.sc.isSettlementEnabled():
 
@@ -332,10 +333,10 @@ def task_contract_run_settlement(options, contracts_addresses, task=None, global
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_daily_inrate_payment(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['daily_inrate_payment']['gas_limit']
-    moc_address = contracts_addresses['MoC']
+    #moc_address = contracts_addresses['MoC']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -344,7 +345,7 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, 
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_moc = get_contract_moc(options, moc_address=moc_address)
+    contract_moc = contracts_loaded["MoC"]  #get_contract_moc(options, moc_address=moc_address)
 
     if contract_moc.sc.isDailyEnabled():
 
@@ -370,11 +371,11 @@ def task_contract_daily_inrate_payment(options, contracts_addresses, task=None, 
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_splitter_split(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_splitter_split(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['splitter_split']['gas_limit']
     app_mode = options['networks'][network_manager.config_network]['app_mode']
-    splitter_address = options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
+    #splitter_address = options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
 
     if 'pay_bitpro_holders_confirm_block' not in global_manager:
         log.info("Task :: {0} :: No!".format(task.task_name))
@@ -411,7 +412,7 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
         aws_put_metric_heart_beat(1)
         return
 
-    contract_splitter = get_contract_commission_splitter(options, splitter_address=splitter_address)
+    contract_splitter = contracts_loaded["CommissionSplitter"]  #get_contract_commission_splitter(options, splitter_address=splitter_address)
 
     info_dict = dict()
     info_dict['before'] = dict()
@@ -494,11 +495,11 @@ def task_contract_splitter_split(options, contracts_addresses, task=None, global
     return save_pending_tx_receipt(tx_receipt, task.task_name)
 
 
-def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_pay_bitpro_holders(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['pay_bitpro_holders']['gas_limit']
     app_mode = options['networks'][network_manager.config_network]['app_mode']
-    moc_address = contracts_addresses['MoC']
+    #moc_address = contracts_addresses['MoC']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -509,7 +510,7 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, gl
         else:
             global_manager['pay_bitpro_holders_confirm_block'] = network_manager.block_number
 
-    contract_moc = get_contract_moc(options, moc_address=moc_address)
+    contract_moc = contracts_loaded["MoC"] #get_contract_moc(options, moc_address=moc_address)
 
     if app_mode == 'MoC':
         is_bitpro_interest_enabled = contract_moc.sc.isBitProInterestEnabled()
@@ -547,10 +548,10 @@ def task_contract_pay_bitpro_holders(options, contracts_addresses, task=None, gl
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_calculate_bma(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_calculate_bma(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['calculate_bma']['gas_limit']
-    moc_state_address = contracts_addresses['MoCState']
+    #moc_state_address = contracts_addresses['MoCState']
     app_mode = options['networks'][network_manager.config_network]['app_mode']
 
     # Not call until tx confirmated!
@@ -560,7 +561,7 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None, global_
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_moc_state = get_contract_moc_state(options, moc_state_address=moc_state_address)
+    contract_moc_state = contracts_loaded["MoCState"] #get_contract_moc_state(options, moc_state_address=moc_state_address)
 
     if contract_moc_state.sc.shouldCalculateEma():
 
@@ -593,10 +594,10 @@ def task_contract_calculate_bma(options, contracts_addresses, task=None, global_
         return save_pending_tx_receipt(None, task.task_name)
 
 
-def task_contract_oracle_poke(options, contracts_addresses, task=None, global_manager=None):
+def task_contract_oracle_poke(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['oracle_poke']['gas_limit']
-    medianizer_address = contracts_addresses['PriceProvider']
+    #medianizer_address = contracts_addresses['PriceProvider']
 
     # Not call until tx confirmated!
     pending_tx_receipt = pending_transaction_receipt(task)
@@ -605,7 +606,7 @@ def task_contract_oracle_poke(options, contracts_addresses, task=None, global_ma
             # Continue on pending status or reverted
             return pending_tx_receipt
 
-    contract_medianizer = get_contract_medianizer(options, medianizer_address=medianizer_address)
+    contract_medianizer = contracts_loaded["PriceProvider"] #get_contract_medianizer(options, medianizer_address=medianizer_address)
 
     price_validity = contract_medianizer.peek()[1]
     if not contract_medianizer.compute()[1] and price_validity:
@@ -690,6 +691,8 @@ class MoCTasks(TasksManager):
 
         self.app_mode = self.options['networks'][self.config_network]['app_mode']
 
+        self.contracts_loaded = dict()
+
         # install custom network if needit
         if self.connection_network.startswith("https") or self.connection_network.startswith("http"):
 
@@ -733,6 +736,7 @@ class MoCTasks(TasksManager):
 
         app_mode = self.options['networks'][network_manager.config_network]['app_mode']
         moc_address = self.options['networks'][network_manager.config_network]['addresses']['MoC']
+        commission_address = self.options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
 
         contract_moc = get_contract_moc(self.options, moc_address=moc_address)
 
@@ -752,6 +756,23 @@ class MoCTasks(TasksManager):
         contract_moc_state = get_contract_moc_state(self.options, moc_state_address=contracts_addresses['MoCState'])
         contracts_addresses['PriceProvider'] = contract_moc_state.price_provider()
 
+        # cache contracts already loaded
+        self.contracts_loaded["MoC"] = contract_moc
+        self.contracts_loaded["MoCState"] = contract_moc_state
+        self.contracts_loaded["PriceProvider"] = get_contract_medianizer(
+            self.options,
+            medianizer_address=contracts_addresses['PriceProvider'])
+        contracts_addresses['CommissionSplitter'] = commission_address
+        self.contracts_loaded["CommissionSplitter"] = get_contract_commission_splitter(
+            self.options, splitter_address=commission_address)
+
+        # Multicall
+        contracts_addresses['Multicall2'] = self.options['networks'][self.config_network]['addresses']['Multicall2']
+
+        self.contracts_loaded["Multicall2"] = Multicall2(
+            network_manager,
+            contract_address=contracts_addresses['Multicall2']).from_abi()
+
         return contracts_addresses
 
     def schedule_tasks(self):
@@ -762,7 +783,7 @@ class MoCTasks(TasksManager):
         aws_put_metric_heart_beat(0)
 
         # set max workers
-        self.max_workers = 1
+        self.max_workers = 3
 
         # Reconnect on lost chain
         log.info("Jobs add: 99. Reconnect on lost chain")
@@ -773,7 +794,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 3. Run Settlement")
             interval = self.options['tasks']['run_settlement']['interval']
             self.add_task(task_contract_run_settlement,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='3. Run Settlement')
@@ -783,7 +804,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 1. Liquidation")
             interval = self.options['tasks']['liquidation']['interval']
             self.add_task(task_contract_liquidation,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='1. Liquidation')
@@ -793,7 +814,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 2. Bucket Liquidation")
             interval = self.options['tasks']['bucket_liquidation']['interval']
             self.add_task(task_contract_bucket_liquidation,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='2. Bucket Liquidation')
@@ -803,7 +824,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 4. Daily Inrate Payment")
             interval = self.options['tasks']['daily_inrate_payment']['interval']
             self.add_task(task_contract_daily_inrate_payment,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='4. Daily Inrate Payment')
@@ -813,7 +834,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 5. Pay Bitpro Holders")
             interval = self.options['tasks']['pay_bitpro_holders']['interval']
             self.add_task(task_contract_pay_bitpro_holders,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='5. Pay Bitpro Holders')
@@ -823,7 +844,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 6. Calculate EMA")
             interval = self.options['tasks']['calculate_bma']['interval']
             self.add_task(task_contract_calculate_bma,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='6. Calculate EMA')
@@ -833,7 +854,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 7. Oracle Compute")
             interval = self.options['tasks']['oracle_poke']['interval']
             self.add_task(task_contract_oracle_poke,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='7. Oracle Compute')
@@ -843,7 +864,7 @@ class MoCTasks(TasksManager):
             log.info("Jobs add: 8. Commission splitter")
             interval = self.options['tasks']['splitter_split']['interval']
             self.add_task(task_contract_splitter_split,
-                          args=[self.options, self.contract_addresses],
+                          args=[self.options, self.contracts_loaded],
                           wait=interval,
                           timeout=180,
                           task_name='8. Commission splitter')
