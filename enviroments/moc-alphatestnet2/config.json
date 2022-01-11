@@ -3,7 +3,7 @@
     "run_settlement": {
       "interval": 15,
       "wait_timeout": 240,
-      "partial_execution_steps": 20,
+      "partial_execution_steps": 5,
       "gas_limit": 5000000
     },
     "liquidation": {
