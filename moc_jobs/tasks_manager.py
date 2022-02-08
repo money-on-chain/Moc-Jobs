@@ -6,7 +6,7 @@ from concurrent.futures import TimeoutError
 import datetime
 from multiprocessing import Manager
 
-from pebble import ProcessPool, sighandler, ProcessExpired, ThreadPool
+from pebble import sighandler, ProcessExpired, ThreadPool
 
 from .logger import log
 from .utils import aws_put_metric_heart_beat
@@ -103,7 +103,7 @@ class TasksManager:
                 # pass task object as vars to run funtion
                 task.kwargs["task"] = task
                 task.kwargs["global_manager"] = global_manager
-                future = pool.schedule(task.func, args=task.args, kwargs=task.kwargs, timeout=task.timeout)
+                future = pool.schedule(task.func, args=task.args, kwargs=task.kwargs)
                 future.add_done_callback(functools.partial(self.on_task_done, task=task))
 
     def start_loop(self):
@@ -111,7 +111,7 @@ class TasksManager:
         log.info("Start Task jobs loop")
         global_manager = Manager().dict()
 
-        with ProcessPool(max_workers=self.max_workers, max_tasks=self.max_tasks) as pool:
+        with ThreadPool(max_workers=self.max_workers, max_tasks=self.max_tasks) as pool:
             try:
                 while True:
                     if self.tasks:

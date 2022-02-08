@@ -3,8 +3,8 @@
     "run_settlement": {
       "interval": 15,
       "wait_timeout": 240,
-      "partial_execution_steps": 20,
-      "gas_limit": 4500000
+      "partial_execution_steps": 1,
+      "gas_limit": 5000000
     },
     "liquidation": {
       "interval": 20,
@@ -19,35 +19,35 @@
       "gas_limit": 4500000
     },
     "daily_inrate_payment": {
-      "interval": 25,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "pay_bitpro_holders": {
-      "interval": 25,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "calculate_bma": {
-      "interval": 35,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
     "splitter_split": {
-      "interval": 35,
+      "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
     }
   },
   "timeout": 60,
   "networks": {
-    "mocTestnetAlpha": {
-      "gas_price": 68000000,
+    "bnbAlphaTestnet": {
       "app_mode": "MoC",
+      "gas_price": 68000000,
       "addresses": {
-        "MoC": "0x01AD6f8E884ed4DDC089fA3efC075E9ba45C9039",
-        "CommissionSplitter": "0x97Dff2039A3b0ab6AD6a315507f8CABd83a9Cb05",
-        "Multicall2": "0xaf7be1ef9537018feda5397d9e3bb9a1e4e27ac8"
+        "MoC": "0xC0321b74Ce197FFCBA1c88bdFA36B046De6F7ADF",
+        "CommissionSplitter": "0x968f128228b6F284C206bF8C793BB851f13E9EA1",
+        "Multicall2": "0x8F3273Fb89B075b1645095ABaC6ed17B2d4Bc576"
       }
 
     }
