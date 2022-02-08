@@ -1,3 +1,3 @@
 boto3
-moneyonchain==2.0.39
+moneyonchain==2.1.16
 pebble
