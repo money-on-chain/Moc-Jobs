@@ -37,6 +37,11 @@
       "interval": 20,
       "wait_timeout": 240,
       "gas_limit": 2000000
+    },
+    "splitter_split_v3": {
+      "interval": 35,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
     }
   },
   "timeout": 60,
@@ -47,6 +52,7 @@
       "addresses": {
         "MoC": "0x01AD6f8E884ed4DDC089fA3efC075E9ba45C9039",
         "CommissionSplitter": "0x97Dff2039A3b0ab6AD6a315507f8CABd83a9Cb05",
+        "CommissionSplitterV3": "0xE85f16aD5431C9526F13D7b1eb0A143720A33aa2",
         "Multicall2": "0xaf7be1ef9537018feda5397d9e3bb9a1e4e27ac8"
       }
 
