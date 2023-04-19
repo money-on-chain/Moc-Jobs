@@ -13,7 +13,9 @@
       "gas_price": 60000001,
       "addresses": {
         "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
-        "CommissionSplitter": "0xa5467535851263122ef1476e24C529CFc6CFc086"
+        "CommissionSplitter": "0x81893C94E41b9D1dAAE96f8894ebBB4946d8bC72",
+        "CommissionSplitterV3": "0x541a9c9E4985Fa2DD0Ada54d3ad0115333Ccd393",
+        "Multicall2": "0x8f344c3b2a02a801c24635f594c5652c8a2eb02a"
       }
     }
 
