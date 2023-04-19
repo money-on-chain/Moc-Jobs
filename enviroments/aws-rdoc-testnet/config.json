@@ -38,6 +38,11 @@
       "wait_timeout": 240,
       "gas_limit": 2000000
     },
+    "splitter_split_v3": {
+      "interval": 35,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
+    },
     "oracle_poke": {
       "interval": 65,
       "wait_timeout": 240,
@@ -51,7 +56,8 @@
       "gas_price": 68000000,
       "addresses": {
         "MoC": "0x7e2F245F7dc8e78576ECB13AEFc0a101E9BE1AD3",
-        "CommissionSplitter": "0x5aF95c49461ef2bE429CD84aDe50867ff5A20fB6",
+        "CommissionSplitter": "0x652FD7b78aCd4d0b9A14dF3Ae40918EFf6770Efd",
+        "CommissionSplitterV3": "0x7fC75AEb9542D416762C9C34E11d3126Fd66FB41",
         "Multicall2": "0xaf7be1ef9537018feda5397d9e3bb9a1e4e27ac8"
       }
 

@@ -15,7 +15,7 @@ from .logger import log
 from .utils import aws_put_metric_heart_beat
 
 
-__VERSION__ = '2.3.6'
+__VERSION__ = '2.3.7'
 
 BUCKET_X2 = '0x5832000000000000000000000000000000000000000000000000000000000000'
 BUCKET_C0 = '0x4330000000000000000000000000000000000000000000000000000000000000'
@@ -374,8 +374,6 @@ def task_contract_daily_inrate_payment(options, contracts_loaded, task=None, glo
 def task_contract_splitter_split(options, contracts_loaded, task=None, global_manager=None):
 
     gas_limit = options['tasks']['splitter_split']['gas_limit']
-    app_mode = options['networks'][network_manager.config_network]['app_mode']
-    #splitter_address = options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
 
     if 'pay_bitpro_holders_confirm_block' not in global_manager:
         log.info("Task :: {0} :: No!".format(task.task_name))
@@ -397,7 +395,7 @@ def task_contract_splitter_split(options, contracts_loaded, task=None, global_ma
         log.info("Task :: {0} :: No!".format(task.task_name))
         return
 
-    # Not call until tx confirmated!
+    # Not call until tx confirmed!
     pending_tx_receipt = pending_transaction_receipt(task)
     if 'receipt' in pending_tx_receipt:
         if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
@@ -414,44 +412,61 @@ def task_contract_splitter_split(options, contracts_loaded, task=None, global_ma
 
     contract_splitter = contracts_loaded["CommissionSplitter"]  #get_contract_commission_splitter(options, splitter_address=splitter_address)
 
-    info_dict = dict()
-    info_dict['before'] = dict()
-    info_dict['after'] = dict()
-    info_dict['proportion'] = dict()
+    tx_args = contract_splitter.tx_arguments(gas_limit=gas_limit, required_confs=0)
 
-    info_dict['proportion']['moc'] = 0.5
-    if app_mode == 'MoC':
-        info_dict['proportion']['moc'] = Web3.fromWei(contract_splitter.moc_proportion(), 'ether')
+    estimate_gas = contract_splitter.sc.split.estimate_gas(tx_args)
+    if estimate_gas > gas_limit:
+        log.error("Task :: {0} :: Estimate gas is > to gas limit".format(task.task_name))
+        aws_put_metric_heart_beat(1)
+        return
 
-    info_dict['proportion']['multisig'] = 1 - info_dict['proportion']['moc']
+    tx_receipt = contract_splitter.sc.split(tx_args)
+    if tx_receipt:
+        log.info("Commission Splitter V2 - Execute successfully!")
 
-    resume = str()
+    return save_pending_tx_receipt(tx_receipt, task.task_name)
 
-    resume += "Splitter address: [{0}]\n".format(contract_splitter.address())
-    resume += "Multisig address: [{0}]\n".format(contract_splitter.commission_address())
-    resume += "MoC address: [{0}]\n".format(contract_splitter.moc_address())
-    resume += "Proportion MOC: [{0}]\n".format(info_dict['proportion']['moc'])
-    resume += "Proportion Multisig: [{0}]\n".format(info_dict['proportion']['multisig'])
 
-    resume += "BEFORE SPLIT:\n"
-    resume += "=============\n"
+def task_contract_splitter_split_v3(options, contracts_loaded, task=None, global_manager=None):
 
-    info_dict['before']['splitter'] = contract_splitter.balance()
-    resume += "Splitter balance: [{0}]\n".format(info_dict['before']['splitter'])
+    gas_limit = options['tasks']['splitter_split']['gas_limit']
 
-    # balances commision
-    balance = Web3.fromWei(network_manager.network_balance(
-        contract_splitter.commission_address()), 'ether')
-    info_dict['before']['commission'] = balance
-    resume += "Multisig balance (proportion: {0}): [{1}]\n".format(info_dict['proportion']['multisig'],
-                                                             info_dict['before']['commission'])
+    if 'pay_bitpro_holders_confirm_block' not in global_manager:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
 
-    # balances moc
-    balance = Web3.fromWei(network_manager.network_balance(contract_splitter.moc_address()), 'ether')
-    info_dict['before']['moc'] = balance
-    resume += "MoC balance (proportion: {0}): [{1}]\n".format(
-        info_dict['proportion']['moc'],
-        info_dict['before']['moc'])
+    pay_bitpro_holders_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
+    if pay_bitpro_holders_confirm_block <= 0:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
+
+    if 'commission_splitter_confirm_block_v3' in global_manager:
+        commission_splitter_confirm_block = global_manager['commission_splitter_confirm_block_v3']
+    else:
+        commission_splitter_confirm_block = 0
+
+    if pay_bitpro_holders_confirm_block > commission_splitter_confirm_block:
+        pass
+    else:
+        log.info("Task :: {0} :: No!".format(task.task_name))
+        return
+
+    # Not call until tx confirmed!
+    pending_tx_receipt = pending_transaction_receipt(task)
+    if 'receipt' in pending_tx_receipt:
+        if not pending_tx_receipt['receipt']['confirmed'] or pending_tx_receipt['receipt']['reverted']:
+            # Continue on pending status or reverted
+            return pending_tx_receipt
+        else:
+            global_manager['commission_splitter_confirm_block_v3'] = network_manager.block_number
+        return pending_tx_receipt
+
+    if pending_queue_is_full():
+        log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
+        aws_put_metric_heart_beat(1)
+        return
+
+    contract_splitter = contracts_loaded["CommissionSplitterV3"]  #get_contract_commission_splitter(options, splitter_address=splitter_address)
 
     tx_args = contract_splitter.tx_arguments(gas_limit=gas_limit, required_confs=0)
 
@@ -463,34 +478,8 @@ def task_contract_splitter_split(options, contracts_loaded, task=None, global_ma
 
     tx_receipt = contract_splitter.sc.split(tx_args)
 
-    resume += "AFTER SPLIT:\n"
-    resume += "=============\n"
-
-    info_dict['after']['splitter'] = contract_splitter.balance()
-    dif = info_dict['after']['splitter'] - info_dict['before']['splitter']
-    resume += "Splitter balance: [{0}] Difference: [{1}]\n".format(info_dict['after']['splitter'], dif)
-
-    # balances commision
-    balance = Web3.fromWei(network_manager.network_balance(
-        contract_splitter.commission_address()), 'ether')
-    info_dict['after']['commission'] = balance
-    dif = info_dict['after']['commission'] - info_dict['before']['commission']
-    resume += "Multisig balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
-        info_dict['proportion']['multisig'],
-        info_dict['after']['commission'],
-        dif)
-
-    # balances moc
-    balance = Web3.fromWei(network_manager.network_balance(contract_splitter.moc_address()), 'ether')
-    info_dict['after']['moc'] = balance
-    dif = info_dict['after']['moc'] - info_dict['before']['moc']
-    resume += "MoC balance (proportion: {0}): [{1}] Difference: [{2}]\n".format(
-        info_dict['proportion']['moc'],
-        info_dict['after']['moc'],
-        dif)
-
     if tx_receipt:
-        log.info(resume)
+        log.info("Commission Splitter V3 - Execute successfully!")
 
     return save_pending_tx_receipt(tx_receipt, task.task_name)
 
@@ -737,6 +726,7 @@ class MoCTasks(TasksManager):
         app_mode = self.options['networks'][network_manager.config_network]['app_mode']
         moc_address = self.options['networks'][network_manager.config_network]['addresses']['MoC']
         commission_address = self.options['networks'][network_manager.config_network]['addresses']['CommissionSplitter']
+        commission_addressV3 = self.options['networks'][network_manager.config_network]['addresses']['CommissionSplitterV3']
 
         contract_moc = get_contract_moc(self.options, moc_address=moc_address)
 
@@ -765,6 +755,10 @@ class MoCTasks(TasksManager):
         contracts_addresses['CommissionSplitter'] = commission_address
         self.contracts_loaded["CommissionSplitter"] = get_contract_commission_splitter(
             self.options, splitter_address=commission_address)
+        # V3
+        contracts_addresses['CommissionSplitterV3'] = commission_addressV3
+        self.contracts_loaded["CommissionSplitterV3"] = get_contract_commission_splitter(
+            self.options, splitter_address=commission_addressV3)
 
         # Multicall
         contracts_addresses['Multicall2'] = self.options['networks'][self.config_network]['addresses']['Multicall2']
@@ -868,6 +862,16 @@ class MoCTasks(TasksManager):
                           wait=interval,
                           timeout=180,
                           task_name='8. Commission splitter')
+
+        # Splitter split V3
+        if 'splitter_split_v3' in self.options['tasks']:
+            log.info("Jobs add: 9. Commission splitter V3")
+            interval = self.options['tasks']['splitter_split_v3']['interval']
+            self.add_task(task_contract_splitter_split_v3,
+                          args=[self.options, self.contracts_loaded],
+                          wait=interval,
+                          timeout=180,
+                          task_name='9. Commission splitter V3')
 
         # Set max workers
         self.max_tasks = len(self.tasks)

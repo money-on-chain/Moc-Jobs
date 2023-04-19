@@ -42,6 +42,11 @@
       "interval": 72,
       "wait_timeout": 240,
       "gas_limit": 2000000
+    },
+    "splitter_split_v3": {
+      "interval": 35,
+      "wait_timeout": 240,
+      "gas_limit": 2000000
     }
   },
   "timeout": 60,
@@ -51,7 +56,8 @@
       "gas_price": 60000001,
       "addresses": {
         "MoC": "0xCfF3fcaeC2352C672C38d77cb1a064B7D50ce7e1",
-        "CommissionSplitter": "0x4C42DBa2a88D4ecc97aA7F28Ced17b4e60523201",
+        "CommissionSplitter": "0xF7FdF7F777c43CD31C4c37Ee851F08A51ABd2DB5",
+        "CommissionSplitterV3": "0x22E7E9a24D230bEBd569e9f376Ee08f5c448880e",
         "Multicall2": "0x8f344c3b2a02a801c24635f594c5652c8a2eb02a"
       }
     }
