@@ -145,7 +145,7 @@ class MoC(Contract):
             **kwargs):
 
         tx_hash = self.connection_manager.send_function_transaction(
-            self.sc.functions.runSettlement,
+            self.sc.functions.evalLiquidation,
             *args,
             **kwargs
         )
@@ -158,7 +158,7 @@ class MoC(Contract):
             **kwargs):
 
         tx_hash = self.connection_manager.send_function_transaction(
-            self.sc.functions.runSettlement,
+            self.sc.functions.payBitProHoldersInterestPayment,
             *args,
             **kwargs
         )
@@ -283,7 +283,7 @@ class MoCMedianizer(Contract):
         return tx_hash
 
 
-class MoCRRC20(Contract):
+class MoCRRC20(MoC):
 
     log = logging.getLogger()
     precision = 10 ** 18
@@ -302,8 +302,21 @@ class MoCRRC20(Contract):
         # finally load the contract
         self.load_contract()
 
+    def pay_bitpro_holders_interest_payment(
+            self,
+            *args,
+            **kwargs):
 
-class MoCConnectorRRC20(Contract):
+        tx_hash = self.connection_manager.send_function_transaction(
+            self.sc.functions.payRiskProHoldersInterestPayment,
+            *args,
+            **kwargs
+        )
+
+        return tx_hash
+
+
+class MoCConnectorRRC20(MoCConnector):
 
     log = logging.getLogger()
     precision = 10 ** 18
@@ -323,7 +336,7 @@ class MoCConnectorRRC20(Contract):
         self.load_contract()
 
 
-class MoCStateRRC20(Contract):
+class MoCStateRRC20(MoCState):
 
     log = logging.getLogger()
     precision = 10 ** 18
@@ -343,7 +356,7 @@ class MoCStateRRC20(Contract):
         self.load_contract()
 
 
-class CommissionSplitterRRC20(Contract):
+class CommissionSplitterRRC20(CommissionSplitter):
 
     log = logging.getLogger()
     precision = 10 ** 18
@@ -363,7 +376,7 @@ class CommissionSplitterRRC20(Contract):
         self.load_contract()
 
 
-class MoCMedianizerRRC20(Contract):
+class MoCMedianizerRRC20(MoCMedianizer):
 
     log = logging.getLogger()
     precision = 10 ** 18

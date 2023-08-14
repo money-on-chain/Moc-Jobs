@@ -130,13 +130,13 @@ class AutomatorTasks(TransactionsTasksManager):
 
         # run_settlement
         if 'run_settlement' in self.config['tasks']:
-            log.info("Jobs add: 3. Run Settlement")
+            log.info("Jobs add: 2. Run Settlement")
             interval = self.config['tasks']['run_settlement']['interval']
             self.add_task(automator.run_settlement,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='3. Run Settlement')
+                          task_name='2. Run Settlement')
 
         # liquidation
         if 'liquidation' in self.config['tasks']:
@@ -150,63 +150,63 @@ class AutomatorTasks(TransactionsTasksManager):
 
         # Daily inrate payment
         if 'daily_inrate_payment' in self.config['tasks']:
-            log.info("Jobs add: 4. Daily Inrate Payment")
+            log.info("Jobs add: 3. Daily Inrate Payment")
             interval = self.config['tasks']['daily_inrate_payment']['interval']
             self.add_task(automator.daily_inrate_payment,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='4. Daily Inrate Payment')
+                          task_name='3. Daily Inrate Payment')
 
         # pay bitpro holders
         if 'pay_bitpro_holders' in self.config['tasks']:
-            log.info("Jobs add: 5. Pay Bitpro Holders")
+            log.info("Jobs add: 4. Pay Bitpro Holders")
             interval = self.config['tasks']['pay_bitpro_holders']['interval']
             self.add_task(automator.pay_bitpro_holders,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='5. Pay Bitpro Holders')
+                          task_name='4. Pay Bitpro Holders')
 
         # calculate EMA
         if 'calculate_bma' in self.config['tasks']:
-            log.info("Jobs add: 6. Calculate EMA")
+            log.info("Jobs add: 5. Calculate EMA")
             interval = self.config['tasks']['calculate_bma']['interval']
             self.add_task(automator.calculate_ema,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='6. Calculate EMA')
+                          task_name='5. Calculate EMA')
 
         # Oracle Poke
         if 'oracle_poke' in self.config['tasks']:
-            log.info("Jobs add: 7. Oracle Compute")
+            log.info("Jobs add: 6. Oracle Compute")
             interval = self.config['tasks']['oracle_poke']['interval']
             self.add_task(automator.oracle_poke,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='7. Oracle Compute')
+                          task_name='6. Oracle Compute')
 
         # Splitter split
         if 'splitter_split' in self.config['tasks']:
-            log.info("Jobs add: 8. Commission splitter")
+            log.info("Jobs add: 7. Commission splitter")
             interval = self.config['tasks']['splitter_split']['interval']
             self.add_task(automator.splitter_split,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='8. Commission splitter')
+                          task_name='7. Commission splitter')
 
         # Splitter split V3
         if 'splitter_split_v3' in self.config['tasks']:
-            log.info("Jobs add: 9. Commission splitter V3")
+            log.info("Jobs add: 8. Commission splitter V3")
             interval = self.config['tasks']['splitter_split_v3']['interval']
             self.add_task(automator.splitter_split_v3,
                           args=[],
                           wait=interval,
                           timeout=180,
-                          task_name='9. Commission splitter V3')
+                          task_name='8. Commission splitter V3')
 
         # Set max workers
         self.max_tasks = len(self.tasks)

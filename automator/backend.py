@@ -233,11 +233,6 @@ class Automator(BaseTransactionManager):
 
             tx_hash = self.contracts_loaded["MoC"].pay_bitpro_holders_interest_payment()
 
-            # if app_mode == 'MoC':
-            #     estimate_gas = contract_moc.sc.payBitProHoldersInterestPayment.estimate_gas(tx_args)
-            # else:
-            #     estimate_gas = contract_moc.sc.payRiskProHoldersInterestPayment.estimate_gas(tx_args)
-
             return self.save_pending_tx_receipt(tx_hash, task.task_name)
 
         else:
