@@ -47,7 +47,7 @@ class Task:
         self.task_name = task_name
 
 
-class TasksManager:
+class TransactionsTasksManager:
 
     def __init__(self):
         self.tasks = dict()
@@ -141,7 +141,7 @@ def test_task_2(task_id):
 
 
 if __name__ == '__main__':
-    jobs = TasksManager()
+    jobs = TransactionsTasksManager()
     jobs.add_task(test_task_1, args=[1])
     jobs.add_task(test_task_2, args=[5])
     jobs.start_loop()
