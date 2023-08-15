@@ -14,7 +14,6 @@ from .base.main import ConnectionHelperBase
 from .tasks_manager import TransactionsTasksManager
 from .logger import log
 from .backend import Automator
-from .utils import aws_put_metric_heart_beat
 
 
 __VERSION__ = '3.0.0'
@@ -87,7 +86,7 @@ class AutomatorTasks(TransactionsTasksManager):
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['MoCState'])
             self.contracts_addresses['PriceProvider'] = self.contracts_loaded[
-                "MoCState"].sc.functions.getBtcPriceProvider()
+                "MoCState"].sc.functions.getBtcPriceProvider().call()
             self.contracts_loaded["PriceProvider"] = MoCMedianizer(
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['PriceProvider'])
@@ -103,7 +102,7 @@ class AutomatorTasks(TransactionsTasksManager):
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['MoCState'])
             self.contracts_addresses['PriceProvider'] = self.contracts_loaded[
-                "MoCState"].sc.functions.getPriceProvider()
+                "MoCState"].sc.functions.getPriceProvider().call()
             self.contracts_loaded["PriceProvider"] = MoCMedianizerRRC20(
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['PriceProvider'])

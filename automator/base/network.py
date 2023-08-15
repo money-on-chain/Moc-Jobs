@@ -12,8 +12,6 @@
 """
 
 from web3 import Web3, Account
-from web3._utils.threads import Timeout
-from web3.exceptions import TimeExhausted
 import json
 import os
 import datetime
@@ -151,15 +149,13 @@ class ConnectionManager(BaseConnectionManager):
     def load_json_contract(self, json_filename, deploy_address=None):
         """ Load the abi from json file """
 
-        network = self.network
-
         with open(json_filename) as f:
             info_json = json.load(f)
         abi = info_json["abi"]
 
         # Get from json if we don't know the address
         if not deploy_address:
-            deploy_address = info_json["networks"][str(self.options['networks'][network]['chain_id'])]['address']
+            raise Exception("Need deploy address!")
 
         sc = self.web3.eth.contract(address=self.web3.to_checksum_address(deploy_address), abi=abi)
 
@@ -231,30 +227,10 @@ class ConnectionManager(BaseConnectionManager):
         if not default_account:
             default_account = self.default_account
 
-        #fxn_to_call = getattr(sc.functions, function_)
-        #built_fxn = fxn_to_call(*tx_args)
         built_fxn = tx_function(*tx_args)
 
-        # gas_estimate = built_fxn.estimate_gas()
-        # self.log.debug("Gas estimate to transact with {}: {}\n".format(function_, gas_estimate))
-        #
-        # if gas_estimate > gas_limit:
-        #     raise Exception("Gas estimated is bigger than gas limit")
-
-        # if tx_params:
-        #     if not isinstance(tx_params, dict):
-        #         raise Exception("Tx params need to be dict type")
-
-        #self.log.debug("Sending transaction to {} with {} as arguments.\n".format(function_, tx_args))
-
-        #from_address = self.accounts[default_account].address
-        #if not nonce:
-        #    nonce = self.web3.eth.get_transaction_count(from_address, "pending")
-
-        # tx_value = 0
-        # if tx_params:
-        #     if 'value' in tx_params:
-        #         tx_value = tx_params['value']
+        if not nonce:
+            nonce = self.web3.eth.get_transaction_count(self.accounts[default_account].address, "pending")
 
         if not gas_price:
             gas_price = self.gas_price
@@ -263,15 +239,17 @@ class ConnectionManager(BaseConnectionManager):
             'chainId': self.chain_id,
             'nonce': nonce,
             'gasPrice': gas_price,
-            'gas': gas_limit,
             'value': value
         }
 
-        transaction = built_fxn.buildTransaction(transaction_dict)
+        if gas_limit:
+            transaction_dict['gas'] = gas_limit
+
+        transaction = built_fxn.build_transaction(transaction_dict)
 
         pk = self.accounts[default_account].key
-        signed = self.web3.eth.account.signTransaction(transaction,
-                                                       private_key=pk)
+        signed = self.web3.eth.account.sign_transaction(transaction,
+                                                        private_key=pk)
 
         transaction_hash = self.web3.eth.send_raw_transaction(
             signed.rawTransaction)

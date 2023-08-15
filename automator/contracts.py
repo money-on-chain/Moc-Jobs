@@ -394,6 +394,3 @@ class MoCMedianizerRRC20(MoCMedianizer):
 
         # finally load the contract
         self.load_contract()
-
-
-

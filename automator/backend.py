@@ -3,6 +3,7 @@ from web3 import Web3, exceptions
 from functools import wraps
 
 from .logger import log
+from .utils import aws_put_metric_heart_beat
 
 
 def on_transaction(method):
@@ -147,7 +148,7 @@ class Automator(BaseTransactionManager):
     @on_transaction
     def calculate_ema(self, task=None, global_manager=None):
 
-        if self.contracts_loaded["MoCState"].sc.functions.shouldCalculateEma():
+        if self.contracts_loaded["MoCState"].sc.functions.shouldCalculateEma().call():
 
             if self.pending_queue_is_full():
                 log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -164,7 +165,7 @@ class Automator(BaseTransactionManager):
     @on_transaction
     def daily_inrate_payment(self, task=None, global_manager=None):
 
-        if self.contracts_loaded["MoC"].sc.functions.isDailyEnabled():
+        if self.contracts_loaded["MoC"].sc.functions.isDailyEnabled().call():
 
             if self.pending_queue_is_full():
                 log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -183,7 +184,7 @@ class Automator(BaseTransactionManager):
 
         partial_execution_steps = self.options['tasks']['run_settlement']['partial_execution_steps']
 
-        if self.contracts_loaded["MoC"].sc.functions.isSettlementEnabled():
+        if self.contracts_loaded["MoC"].sc.functions.isSettlementEnabled().call():
 
             if self.pending_queue_is_full():
                 log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -202,7 +203,7 @@ class Automator(BaseTransactionManager):
 
         partial_execution_steps = self.options['tasks']['liquidation']['partial_execution_steps']
 
-        if self.contracts_loaded["MoCState"].sc.functions.isLiquidationReached():
+        if self.contracts_loaded["MoCState"].sc.functions.isLiquidationReached().call():
 
             if self.pending_queue_is_full():
                 log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -221,9 +222,9 @@ class Automator(BaseTransactionManager):
         app_mode = self.options['app_mode']
 
         if app_mode == 'MoC':
-            is_bitpro_interest_enabled = self.contracts_loaded["MoC"].sc.functions.isBitProInterestEnabled()
+            is_bitpro_interest_enabled = self.contracts_loaded["MoC"].sc.functions.isBitProInterestEnabled().call()
         else:
-            is_bitpro_interest_enabled = self.contracts_loaded["MoC"].sc.functions.isRiskProInterestEnabled()
+            is_bitpro_interest_enabled = self.contracts_loaded["MoC"].sc.functions.isRiskProInterestEnabled().call()
 
         if is_bitpro_interest_enabled:
 
@@ -242,8 +243,8 @@ class Automator(BaseTransactionManager):
     @on_transaction
     def oracle_poke(self, task=None, global_manager=None):
 
-        price_validity = self.contracts_loaded["PriceProvider"].sc.functions.peek()[1]
-        if not self.contracts_loaded["PriceProvider"].sc.functions.compute()[1] and price_validity:
+        price_validity = self.contracts_loaded["PriceProvider"].sc.functions.peek().call()[1]
+        if not self.contracts_loaded["PriceProvider"].sc.functions.compute().call()[1] and price_validity:
 
             if self.pending_queue_is_full():
                 log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
@@ -251,14 +252,14 @@ class Automator(BaseTransactionManager):
 
             tx_hash = self.contracts_loaded["PriceProvider"].poke()
             log.error("Task :: {0} :: Not valid price! Disabling Price!".format(task.task_name))
-            #aws_put_metric_heart_beat(1)
+            aws_put_metric_heart_beat(1)
 
             return self.save_pending_tx_receipt(tx_hash, task.task_name)
 
         # if no valid price in oracle please send alarm
         if not price_validity:
             log.error("Task :: {0} :: No valid price in oracle!".format(task.task_name))
-            #aws_put_metric_heart_beat(1)
+            aws_put_metric_heart_beat(1)
 
         log.info("Task :: {0} :: No!".format(task.task_name))
         return self.save_pending_tx_receipt(None, task.task_name)
@@ -323,7 +324,6 @@ class Automator(BaseTransactionManager):
 
         if self.pending_queue_is_full():
             log.error("Task :: {0} :: Pending queue is full".format(task.task_name))
-            #aws_put_metric_heart_beat(1)
             return
 
         tx_hash = self.contracts_loaded["CommissionSplitterV3"].split()
