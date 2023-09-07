@@ -219,6 +219,26 @@ class MoCState(Contract):
         return tx_hash
 
 
+class MoCInrate(Contract):
+
+    log = logging.getLogger()
+    precision = 10 ** 18
+
+    contract_name = 'MoCInrate'
+    contract_abi = Contract.content_abi_file(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), 'abi/moc/MoCInrate.abi'))
+
+    def __init__(self, connection_manager, contract_address=None, contract_abi=None, contract_bin=None):
+
+        super().__init__(connection_manager,
+                         contract_address=contract_address,
+                         contract_abi=contract_abi,
+                         contract_bin=contract_bin)
+
+        # finally load the contract
+        self.load_contract()
+
+
 class CommissionSplitter(Contract):
 
     log = logging.getLogger()
@@ -344,6 +364,26 @@ class MoCStateRRC20(MoCState):
     contract_name = 'MoCState'
     contract_abi = Contract.content_abi_file(
         os.path.join(os.path.dirname(os.path.realpath(__file__)), 'abi/rrc20/MoCState.abi'))
+
+    def __init__(self, connection_manager, contract_address=None, contract_abi=None, contract_bin=None):
+
+        super().__init__(connection_manager,
+                         contract_address=contract_address,
+                         contract_abi=contract_abi,
+                         contract_bin=contract_bin)
+
+        # finally load the contract
+        self.load_contract()
+
+
+class MoCInrateRRC20(Contract):
+
+    log = logging.getLogger()
+    precision = 10 ** 18
+
+    contract_name = 'MoCInrate'
+    contract_abi = Contract.content_abi_file(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), 'abi/rrc20/MoCInrate.abi'))
 
     def __init__(self, connection_manager, contract_address=None, contract_abi=None, contract_bin=None):
 

@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 
 # Autor
 LABEL maintainer='martin.mulone@moneyonchain.com'
@@ -17,10 +17,6 @@ RUN echo $TZ > /etc/timezone && \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN brownie networks add RskNetwork rskTestnetPublic host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
-RUN brownie networks add RskNetwork rskTestnetPrivate host=http://moc-rsk-node-testnet.moneyonchain.com:4454 chainid=31 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
-RUN brownie networks add RskNetwork rskMainnetPublic host=https://public-node.rsk.co chainid=30 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
-RUN brownie networks add RskNetwork rskMainnetPrivate host=http://moc-rsk-node-mainnet.moneyonchain.com:4454 chainid=30 explorer=https://blockscout.com/rsk/mainnet/api timeout=180
 
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
     && mkdir /home/www-data/app/moc_jobs
@@ -28,14 +24,11 @@ RUN mkdir /home/www-data && mkdir /home/www-data/app \
 ARG CONFIG=config.json
 
 WORKDIR /home/www-data/app/moc_jobs/
-COPY add_custom_network.sh ./
-COPY app_run_moc_jobs.py ./
+COPY app_run_automator.py ./
 ADD $CONFIG ./config.json
-COPY config_parser.py ./
 COPY moc_jobs/ ./moc_jobs/
-
 ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
 ENV AWS_DEFAULT_REGION=us-west-1
 ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
-#CMD ["python", "./moc_jobs.py"]
-CMD /bin/bash -c 'bash ./add_custom_network.sh; python ./app_run_moc_jobs.py'
+
+CMD ["python", "./app_run_automator.py"]

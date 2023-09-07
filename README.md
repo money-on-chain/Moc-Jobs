@@ -36,6 +36,13 @@ Select settings from environments/ and copy to ./config.json
 
 `python ./app_run_automator.py `
 
+#### Custom node instead using of public node
+
+If you want to use your custom private node pass as environment settings, before running price feeder:
+
+`export APP_CONNECTION_URI=https://public-node.rsk.co`
+
+
 **Usage Docker**
 
 Build, change path to correct environment
@@ -50,17 +57,5 @@ Run, replace ACCOUNT_PK_SECRET  with your private key owner of the account
 docker run -d \
 --name moc_jobs_1 \
 --env ACCOUNT_PK_SECRET=asdfasdfasdf \
---env APP_CONNECTION_NETWORK=rskTestnetPublic \
---env APP_CONFIG_NETWORK=mocTestnetAlpha \
 moc_jobs_ec2_alphatestnet
 ```
-
-### Custom node
-
-**APP_CONNECTION_NETWORK:** https://public-node.testnet.rsk.co,31
-  
- 
-### Jobs explain
-
-Some of this tasks you can run directly from the app in https://alpha.moneyonchain.com/advanced
-
