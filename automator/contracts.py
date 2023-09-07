@@ -269,6 +269,8 @@ class CommissionSplitter(Contract):
             **kwargs
         )
 
+        return tx_hash
+
 
 class MoCMedianizer(Contract):
 

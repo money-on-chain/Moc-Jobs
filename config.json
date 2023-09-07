@@ -6,7 +6,7 @@
   "gas_price_multiply_factor": 1.01,
   "tasks": {
     "run_settlement": {
-      "interval": 15,
+      "interval": 5,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 4500000,
@@ -18,7 +18,7 @@
       }
     },
     "liquidation": {
-      "interval": 20,
+      "interval": 5,
       "wait_timeout": 240,
       "partial_execution_steps": 20,
       "gas_limit": 4500000,
@@ -30,7 +30,7 @@
       }
     },
     "daily_inrate_payment": {
-      "interval": 25,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 2000000,
       "cloudwatch": {
@@ -41,7 +41,7 @@
       }
     },
     "pay_bitpro_holders": {
-      "interval": 25,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 2000000,
       "cloudwatch": {
@@ -52,7 +52,7 @@
       }
     },
     "calculate_bma": {
-      "interval": 35,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 2000000,
       "cloudwatch": {
@@ -63,7 +63,7 @@
       }
     },
     "splitter_split": {
-      "interval": 35,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 2000000,
       "cloudwatch": {
@@ -74,7 +74,7 @@
       }
     },
     "splitter_split_v3": {
-      "interval": 35,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 2000000,
       "cloudwatch": {
@@ -85,7 +85,7 @@
       }
     },
     "oracle_poke": {
-      "interval": 36,
+      "interval": 5,
       "wait_timeout": 240,
       "gas_limit": 200000,
       "cloudwatch": {

@@ -130,9 +130,10 @@ class TransactionsTasksManager:
 def on_pending_transactions(method):
     @wraps(method)
     def _impl(self, *method_args, **method_kwargs):
-        pending_txs = self.pending_transactions(method_kwargs['task'])
+        pending_txs, confirmed_txs = self.pending_transactions(method_kwargs['task'])
         task_result = dict()
         task_result['pending_transactions'] = pending_txs
+        task_result['confirmed_txs'] = confirmed_txs
         method_kwargs['task_result'] = task_result
         method_result = method(self, *method_args, **method_kwargs)
         return method_result
@@ -163,6 +164,7 @@ class PendingTransactionsTasksManager(TransactionsTasksManager):
 
         # get the last nonce
         last_used_nonce = web3.eth.get_transaction_count(account_address)
+        confirmed_txs = list()
 
         if not task.pending_transactions:
             task.pending_transactions = list()
@@ -263,6 +265,8 @@ class PendingTransactionsTasksManager(TransactionsTasksManager):
                         )
                     )
 
+                    confirmed_txs.append((tx['hash'], tx_rcp['blockNumber']))
+
                     clear = True
 
                 # 3. STATUS: Reverted status
@@ -272,7 +276,7 @@ class PendingTransactionsTasksManager(TransactionsTasksManager):
                     label_timeout = 'Reverted TX!'
 
                     log.error("Task :: {0} :: {1} [{2}] Elapsed: [{3}]".format(
-                        task.task_name, label_timeout, Web3.from_wei(tx['hash'], 'gwei'), elapsed.seconds))
+                        task.task_name, label_timeout, Web3.to_hex(tx['hash']), elapsed.seconds))
 
                     clear = True
 
@@ -292,7 +296,7 @@ class PendingTransactionsTasksManager(TransactionsTasksManager):
             if clear:
                 task.pending_transactions = []
 
-        return task.pending_transactions
+        return task.pending_transactions, confirmed_txs
 
 
 def test_task_1(task_id):
