@@ -9,7 +9,7 @@ run async of the app, and call directly to the contract through node.
  1. Contract liquidation
  2. Contract run settlement
  3. Contract daily inrate payment
- 4. Contract pay bitpro holders
+ 4. Contract pay TC holders
  5. Contract calculate EMA
  6. Oracle Compute: Check expiration of price in Oracle.
  7. Execute Commission splitter
