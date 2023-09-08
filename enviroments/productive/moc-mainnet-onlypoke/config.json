@@ -1,0 +1,26 @@
+{
+  "app_mode": "MoC",
+  "uri": "https://public-node.rsk.co",
+  "chain_id": 30,
+  "timeout": 180,
+  "gas_price_multiply_factor": 1.01,
+  "tasks": {
+    "oracle_poke": {
+      "interval": 5,
+      "wait_timeout": 240,
+      "gas_limit": 200000,
+      "cloudwatch": {
+        "metric_name": "MOC-MAINNET",
+        "dimensions_name": "JOBS",
+        "dimensions_value": "Error",
+        "namespace": "MOC/EXCEPTIONS"
+      }
+    }
+  },
+  "addresses": {
+    "MoC": "0xf773B590aF754D597770937Fa8ea7AbDf2668370",
+    "CommissionSplitter": "0x81893C94E41b9D1dAAE96f8894ebBB4946d8bC72",
+    "CommissionSplitterV3": "0x541a9c9E4985Fa2DD0Ada54d3ad0115333Ccd393",
+    "Multicall2": "0x8f344c3b2a02a801c24635f594c5652c8a2eb02a"
+  }
+}
