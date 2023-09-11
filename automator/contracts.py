@@ -377,6 +377,19 @@ class MoCStateRRC20(MoCState):
         # finally load the contract
         self.load_contract()
 
+    def calculate_moving_average(
+            self,
+            *args,
+            **kwargs):
+
+        tx_hash = self.connection_manager.send_function_transaction(
+            self.sc.functions.calculateReserveTokenMovingAverage,
+            *args,
+            **kwargs
+        )
+
+        return tx_hash
+
 
 class MoCInrateRRC20(Contract):
 

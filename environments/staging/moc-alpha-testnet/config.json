@@ -83,17 +83,6 @@
         "dimensions_value": "Error",
         "namespace": "MOC/EXCEPTIONS"
       }
-    },
-    "oracle_poke": {
-      "interval": 5,
-      "wait_timeout": 240,
-      "gas_limit": 200000,
-      "cloudwatch": {
-        "metric_name": "MOC-ALPHA-TESTNET",
-        "dimensions_name": "JOBS",
-        "dimensions_value": "Error",
-        "namespace": "MOC/EXCEPTIONS"
-      }
     }
   },
   "addresses": {
