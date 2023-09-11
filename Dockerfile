@@ -19,16 +19,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 RUN mkdir /home/www-data && mkdir /home/www-data/app \
-    && mkdir /home/www-data/app/moc_jobs
+    && mkdir /home/www-data/app/automator
 
 ARG CONFIG=config.json
 
-WORKDIR /home/www-data/app/moc_jobs/
+WORKDIR /home/www-data/app/automator/
 COPY app_run_automator.py ./
 ADD $CONFIG ./config.json
-COPY moc_jobs/ ./moc_jobs/
-ENV PATH "$PATH:/home/www-data/app/moc_jobs/"
+COPY automator/ ./automator/
+ENV PATH "$PATH:/home/www-data/app/automator/"
 ENV AWS_DEFAULT_REGION=us-west-1
-ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/moc_jobs/"
+ENV PYTHONPATH "${PYTONPATH}:/home/www-data/app/automator/"
 
 CMD ["python", "./app_run_automator.py"]
