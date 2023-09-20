@@ -297,7 +297,7 @@ class MoCMedianizer(Contract):
             **kwargs):
 
         tx_hash = self.connection_manager.send_function_transaction(
-            self.sc.functions.runSettlement,
+            self.sc.functions.poke,
             *args,
             **kwargs
         )
