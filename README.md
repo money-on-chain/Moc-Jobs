@@ -1,71 +1,51 @@
-# Moc Jobs (Automator)
+# Stable Protocol Automator
 
-This is a backend executor jobs. Periodic tasks that runs differents jobs, 
-that call the contracts and asks if the are ready to execute it. This jobs 
-run async of the app, and call directly to the contract througth node. 
+This is a backend executor jobs. Periodic tasks that runs different jobs, 
+that call the contracts and asks if they are ready to execute it. This jobs 
+run async of the app, and call directly to the contract through node. 
 
-### Currents jobs
+### Currents tasks
 
  1. Contract liquidation
- 2. Contract bucket liquidation
- 3. Contract run settlement
- 4. Contract daily inrate payment
- 5. Contract pay bitpro holders
- 6. Contract calculate EMA
- 7. Oracle Compute: Check expiration of price in Oracle.
- 8. Execute Commission splitter
+ 2. Contract run settlement
+ 3. Contract daily inrate payment
+ 4. Contract pay TC holders
+ 5. Contract calculate EMA
+ 6. Oracle Compute: Check expiration of price in Oracle.
+ 7. Execute Commission splitter
+ 8. Execute Commission splitter V3
  
  
 ### Usage
 
 **Requirement and installation**
  
-*  We need Python 3.9+
+*  We need Python 3.10+
 
 Install libraries
 
 `pip install -r requirements.txt`
 
-**Brownie and node connection**
+**Usage**
 
-`pip install eth-brownie==1.16.2`
+Select settings from environments/ and copy to ./config.json 
 
-and to install connection nodes required to connect:
-
-```
-console> brownie networks add RskNetwork rskTesnetPublic host=https://public-node.testnet.rsk.co chainid=31 explorer=https://blockscout.com/rsk/mainnet/api
-console> brownie networks add RskNetwork rskMainnetPublic host=https://public-node.rsk.co chainid=30 explorer=https://blockscout.com/rsk/mainnet/api
-```
-
-**Connection table**
-
-| Network Name      | Network node          | Host                               | Chain    |
-|-------------------|-----------------------|------------------------------------|----------|
-| rskTestnetPublic   | RSK Testnet Public    | https://public-node.testnet.rsk.co | 31       |    
-| rskTestnetLocal    | RSK Testnet Local     | http://localhost:4444              | 31       |
-| rskMainnetPublic  | RSK Mainnet Public    | https://public-node.rsk.co         | 30       |
-| rskMainnetLocal   | RSK Mainnet Local     | http://localhost:4444              | 30       |
-
-
-**Usage Job**
-
-Make sure to change **config.json** to point to your network.
+**Run**
 
 `export ACCOUNT_PK_SECRET=(Your PK)`
 
-`python app_run_moc_jobs.py --connection_network=rskTestnetPublic --config_network=mocTestnetAlpha --config ./enviroments/moc-alphatestnet2/config.json`
+`python ./app_run_automator.py `
 
-**--config:** Path to config.json 
+#### Custom node instead using of public node
 
-**--config_network=mocTestnetAlpha:** This is enviroment we want to use
+If you want to use your custom private node pass as environment settings, before running price feeder:
 
-**--connection_network=rskTesnetPublic:** Connection Network name this is the label of brownie predefined connection or 
-custom connection:`--connection_network=https://public-node.testnet.rsk.co,31` 
+`export APP_CONNECTION_URI=https://public-node.rsk.co`
 
 
 **Usage Docker**
 
-Build, change path to correct enviroment
+Build, change path to correct environment
 
 ```
 docker build -t moc_jobs -f Dockerfile --build-arg CONFIG=./enviroments/moc-alphatestnet2/config.json .
@@ -77,17 +57,5 @@ Run, replace ACCOUNT_PK_SECRET  with your private key owner of the account
 docker run -d \
 --name moc_jobs_1 \
 --env ACCOUNT_PK_SECRET=asdfasdfasdf \
---env APP_CONNECTION_NETWORK=rskTestnetPublic \
---env APP_CONFIG_NETWORK=mocTestnetAlpha \
 moc_jobs_ec2_alphatestnet
 ```
-
-### Custom node
-
-**APP_CONNECTION_NETWORK:** https://public-node.testnet.rsk.co,31
-  
- 
-### Jobs explain
-
-Some of this tasks you can run directly from the app in https://alpha.moneyonchain.com/advanced
-
