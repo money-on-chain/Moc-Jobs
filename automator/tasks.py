@@ -248,10 +248,6 @@ class Automator(PendingTransactionsTasksManager):
         else:
             is_bitpro_interest_enabled = self.contracts_loaded["MoC"].sc.functions.isRiskProInterestEnabled().call()
 
-        # write global on confirmed transaction
-        if task_result.get('confirmed_txs', None):
-            global_manager['pay_bitpro_holders_confirm_block'] = task_result['confirmed_txs'][0][1]
-
         if is_bitpro_interest_enabled:
 
             # return if there are pending transactions
@@ -290,6 +286,8 @@ class Automator(PendingTransactionsTasksManager):
 
                 log.info("Task :: {0} :: Sending TX :: Hash: [{1}] Nonce: [{2}] Gas Price: [{3}]".format(
                     task.task_name, Web3.to_hex(new_tx['hash']), new_tx['nonce'], int(calculated_gas_price * 10 ** 18)))
+
+                global_manager['pay_bitpro_holders_confirm_block'] = self.connection_helper.connection_manager.block_number + 2
 
         else:
             log.info("Task :: {0} :: No!".format(task.task_name))

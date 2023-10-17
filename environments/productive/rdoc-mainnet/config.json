@@ -65,7 +65,7 @@
     "splitter_split": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 1000000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "RDOC-MAINNET",
         "dimensions_name": "JOBS",
@@ -76,7 +76,7 @@
     "splitter_split_v3": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 1000000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "RDOC-MAINNET",
         "dimensions_name": "JOBS",
@@ -87,7 +87,7 @@
     "oracle_poke": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 200000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "RDOC-MAINNET",
         "dimensions_name": "JOBS",

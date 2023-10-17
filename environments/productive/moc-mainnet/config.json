@@ -32,7 +32,7 @@
     "daily_inrate_payment": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 400000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "MOC-MAINNET",
         "dimensions_name": "JOBS",
@@ -43,7 +43,7 @@
     "pay_bitpro_holders": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 400000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "MOC-MAINNET",
         "dimensions_name": "JOBS",
@@ -54,7 +54,7 @@
     "calculate_bma": {
       "interval": 5,
       "wait_timeout": 240,
-      "gas_limit": 400000,
+      "gas_limit": 600000,
       "cloudwatch": {
         "metric_name": "MOC-MAINNET",
         "dimensions_name": "JOBS",
