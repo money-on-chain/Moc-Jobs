@@ -11,10 +11,10 @@ from .contracts import Multicall2, \
     MoCRRC20, \
     MoCConnectorRRC20, \
     MoCStateRRC20,\
-    CommissionSplitterRRC20,\
     MoCMedianizerRRC20,\
     MoCInrate,\
-    MoCInrateRRC20
+    MoCInrateRRC20, \
+    ERC20Token
 
 from .base.main import ConnectionHelperBase
 from .tasks_manager import PendingTransactionsTasksManager, on_pending_transactions
@@ -22,7 +22,7 @@ from .logger import log
 from .utils import aws_put_metric_heart_beat
 
 
-__VERSION__ = '3.0.2'
+__VERSION__ = '3.0.3'
 
 
 log.info("Starting Stable Protocol Automator version {0}".format(__VERSION__))
@@ -351,130 +351,72 @@ class Automator(PendingTransactionsTasksManager):
         return task_result
 
     @on_pending_transactions
-    def splitter_split(self, task=None, global_manager=None, task_result=None):
+    def commission_splitter(self, index, task=None, global_manager=None, task_result=None):
 
-        if 'pay_bitpro_holders_confirm_block' not in global_manager:
-            log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        pay_bitpro_holders_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
-        if pay_bitpro_holders_confirm_block <= 0:
-            log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        if 'commission_splitter_confirm_block' in global_manager:
-            commission_splitter_confirm_block = global_manager['commission_splitter_confirm_block']
-        else:
-            commission_splitter_confirm_block = 0
-
-        if pay_bitpro_holders_confirm_block > commission_splitter_confirm_block:
-            pass
-        else:
-            log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        # return if there are pending transactions
-        if task_result.get('pending_transactions', None):
-            return task_result
-
+        commission_setting = self.config['tasks']['commission_splitters'][index]
         web3 = self.connection_helper.connection_manager.web3
 
-        nonce = web3.eth.get_transaction_count(
-            self.connection_helper.connection_manager.accounts[0].address, "pending")
-
-        # get gas price from node
-        node_gas_price = decimal.Decimal(Web3.from_wei(web3.eth.gas_price, 'ether'))
-
-        # Multiply factor of the using gas price
-        calculated_gas_price = node_gas_price * decimal.Decimal(self.config['gas_price_multiply_factor'])
-
-        try:
-            tx_hash = self.contracts_loaded["CommissionSplitter"].split(
-                gas_limit=self.config['tasks']['splitter_split']['gas_limit'],
-                gas_price=int(calculated_gas_price * 10 ** 18),
-                nonce=nonce
-            )
-        except ValueError as err:
-            log.error("Task :: {0} :: Error sending transaction! \n {1}".format(task.task_name, err))
-            return task_result
-
-        if tx_hash:
-            new_tx = dict()
-            new_tx['hash'] = tx_hash
-            new_tx['timestamp'] = datetime.datetime.now()
-            new_tx['gas_price'] = calculated_gas_price
-            new_tx['nonce'] = nonce
-            new_tx['timeout'] = self.config['tasks']['splitter_split']['wait_timeout']
-            task_result['pending_transactions'].append(new_tx)
-
-            log.info("Task :: {0} :: Sending TX :: Hash: [{1}] Nonce: [{2}] Gas Price: [{3}]".format(
-                task.task_name, Web3.to_hex(new_tx['hash']), new_tx['nonce'], int(calculated_gas_price * 10 ** 18)))
-
-        global_manager['commission_splitter_confirm_block'] = self.connection_helper.connection_manager.block_number
-
-        return task_result
-
-    @on_pending_transactions
-    def splitter_split_v3(self, task=None, global_manager=None, task_result=None):
-
-        if 'pay_bitpro_holders_confirm_block' not in global_manager:
-            log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        pay_bitpro_holders_confirm_block = global_manager['pay_bitpro_holders_confirm_block']
-        if pay_bitpro_holders_confirm_block <= 0:
-            log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        if 'commission_splitter_confirm_block_v3' in global_manager:
-            commission_splitter_confirm_block = global_manager['commission_splitter_confirm_block_v3']
+        # If AC Token or Coinbase collateral
+        if commission_setting["ac_token"]:
+            coin_balance = self.contracts_loaded[
+                "CommissionSplitter_Token_{0}".format(index)].sc.functions.balanceOf(commission_setting["address"]).call()
         else:
-            commission_splitter_confirm_block = 0
+            coin_balance = web3.eth.get_balance(Web3.to_checksum_address(commission_setting['address']))
 
-        if pay_bitpro_holders_confirm_block > commission_splitter_confirm_block:
-            pass
+        fee_token_balance = 0
+        if commission_setting["fee_token"]:
+            fee_token_balance = self.contracts_loaded[
+                "CommissionSplitter_FeeToken_{0}".format(index)].sc.functions.balanceOf(
+                commission_setting["address"]).call()
+
+        if coin_balance > commission_setting["min_balance"] or \
+                fee_token_balance > commission_setting["min_balance_fee_token"]:
+
+            # return if there are pending transactions
+            if task_result.get('pending_transactions', None):
+                return task_result
+
+            log.info(
+                "Task :: {0} :: Commission Splitter has balance!. Balances: -AC Token: {1}. -Fee Token: {2}.  ".format(
+                    task.task_name,
+                    Web3.from_wei(coin_balance, 'ether'),
+                    Web3.from_wei(fee_token_balance, 'ether')))
+
+            web3 = self.connection_helper.connection_manager.web3
+
+            nonce = web3.eth.get_transaction_count(
+                self.connection_helper.connection_manager.accounts[0].address, "pending")
+
+            # get gas price from node
+            node_gas_price = decimal.Decimal(Web3.from_wei(web3.eth.gas_price, 'ether'))
+
+            # Multiply factor of the using gas price
+            calculated_gas_price = node_gas_price * decimal.Decimal(self.config['gas_price_multiply_factor'])
+
+            try:
+                tx_hash = self.contracts_loaded["CommissionSplitter_{0}".format(index)].split(
+                    gas_limit=commission_setting['gas_limit'],
+                    gas_price=int(calculated_gas_price * 10 ** 18),
+                    nonce=nonce
+                )
+            except ValueError as err:
+                log.error("Task :: {0} :: Error sending transaction! \n {1}".format(task.task_name, err))
+                return task_result
+
+            if tx_hash:
+                new_tx = dict()
+                new_tx['hash'] = tx_hash
+                new_tx['timestamp'] = datetime.datetime.now()
+                new_tx['gas_price'] = calculated_gas_price
+                new_tx['nonce'] = nonce
+                new_tx['timeout'] = commission_setting['wait_timeout']
+                task_result['pending_transactions'].append(new_tx)
+
+                log.info("Task :: {0} :: Sending TX :: Hash: [{1}] Nonce: [{2}] Gas Price: [{3}]".format(
+                    task.task_name, Web3.to_hex(new_tx['hash']), new_tx['nonce'], int(calculated_gas_price * 10 ** 18)))
+
         else:
             log.info("Task :: {0} :: No!".format(task.task_name))
-            return task_result
-
-        # return if there are pending transactions
-        if task_result.get('pending_transactions', None):
-            return task_result
-
-        web3 = self.connection_helper.connection_manager.web3
-
-        nonce = web3.eth.get_transaction_count(
-            self.connection_helper.connection_manager.accounts[0].address, "pending")
-
-        # get gas price from node
-        node_gas_price = decimal.Decimal(Web3.from_wei(web3.eth.gas_price, 'ether'))
-
-        # Multiply factor of the using gas price
-        calculated_gas_price = node_gas_price * decimal.Decimal(self.config['gas_price_multiply_factor'])
-
-        try:
-            tx_hash = self.contracts_loaded["CommissionSplitterV3"].split(
-                gas_limit=self.config['tasks']['splitter_split_v3']['gas_limit'],
-                gas_price=int(calculated_gas_price * 10 ** 18),
-                nonce=nonce
-            )
-        except ValueError as err:
-            log.error("Task :: {0} :: Error sending transaction! \n {1}".format(task.task_name, err))
-            return task_result
-
-        if tx_hash:
-            new_tx = dict()
-            new_tx['hash'] = tx_hash
-            new_tx['timestamp'] = datetime.datetime.now()
-            new_tx['gas_price'] = calculated_gas_price
-            new_tx['nonce'] = nonce
-            new_tx['timeout'] = self.config['tasks']['splitter_split_v3']['wait_timeout']
-            task_result['pending_transactions'].append(new_tx)
-
-            log.info("Task :: {0} :: Sending TX :: Hash: [{1}] Nonce: [{2}] Gas Price: [{3}]".format(
-                task.task_name, Web3.to_hex(new_tx['hash']), new_tx['nonce'], int(calculated_gas_price * 10 ** 18)))
-
-        global_manager['commission_splitter_confirm_block_v3'] = self.connection_helper.connection_manager.block_number
 
         return task_result
 
@@ -553,12 +495,6 @@ class AutomatorTasks(Automator):
             self.contracts_loaded["PriceProvider"] = MoCMedianizer(
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['PriceProvider'])
-            self.contracts_loaded["CommissionSplitter"] = CommissionSplitter(
-                self.connection_helper.connection_manager,
-                contract_address=self.config['addresses']['CommissionSplitter'])
-            self.contracts_loaded["CommissionSplitterV3"] = CommissionSplitter(
-                self.connection_helper.connection_manager,
-                contract_address=self.config['addresses']['CommissionSplitterV3'])
         else:
             # RRC20
             self.contracts_loaded["MoCState"] = MoCStateRRC20(
@@ -572,12 +508,36 @@ class AutomatorTasks(Automator):
             self.contracts_loaded["PriceProvider"] = MoCMedianizerRRC20(
                 self.connection_helper.connection_manager,
                 contract_address=self.contracts_addresses['PriceProvider'])
-            self.contracts_loaded["CommissionSplitter"] = CommissionSplitterRRC20(
-                self.connection_helper.connection_manager,
-                contract_address=self.config['addresses']['CommissionSplitter'])
-            self.contracts_loaded["CommissionSplitterV3"] = CommissionSplitterRRC20(
-                self.connection_helper.connection_manager,
-                contract_address=self.config['addresses']['CommissionSplitterV3'])
+
+        # Commission splitters
+        if 'commission_splitters' in self.config['tasks']:
+            count = 0
+            for setting_commission in self.config['tasks']['commission_splitters']:
+                self.contracts_loaded["CommissionSplitter_{0}".format(count)] = CommissionSplitter(
+                    self.connection_helper.connection_manager,
+                    contract_address=setting_commission['address'])
+                self.contracts_addresses["CommissionSplitter_{0}".format(count)] = self.contracts_loaded[
+                    "CommissionSplitter_{0}".format(count)].address().lower()
+
+                # Token Collateral only with rrc20 collateral support
+                # on coinbase this have to be empty
+                if setting_commission['ac_token']:
+                    self.contracts_loaded["CommissionSplitter_Token_{0}".format(count)] = ERC20Token(
+                        self.connection_helper.connection_manager,
+                        contract_address=setting_commission['ac_token'])
+                    self.contracts_addresses["CommissionSplitter_Token_{0}".format(count)] = self.contracts_loaded[
+                        "CommissionSplitter_Token_{0}".format(count)].address().lower()
+
+                # Fee Token
+                if setting_commission['fee_token']:
+                    self.contracts_loaded["CommissionSplitter_FeeToken_{0}".format(count)] = ERC20Token(
+                        self.connection_helper.connection_manager,
+                        contract_address=setting_commission['fee_token'])
+                    self.contracts_addresses["CommissionSplitter_FeeToken_{0}".format(count)] = \
+                    self.contracts_loaded[
+                        "CommissionSplitter_FeeToken_{0}".format(count)].address().lower()
+
+                count += 1
 
         # Multicall
         self.contracts_loaded["Multicall2"] = Multicall2(
@@ -651,25 +611,18 @@ class AutomatorTasks(Automator):
                           timeout=180,
                           task_name='6. Oracle Compute')
 
-        # Splitter split
-        if 'splitter_split' in self.config['tasks']:
-            log.info("Jobs add: 7. Commission splitter")
-            interval = self.config['tasks']['splitter_split']['interval']
-            self.add_task(self.splitter_split,
-                          args=[],
-                          wait=interval,
-                          timeout=180,
-                          task_name='7. Commission splitter')
-
-        # Splitter split V3
-        if 'splitter_split_v3' in self.config['tasks']:
-            log.info("Jobs add: 8. Commission splitter V3")
-            interval = self.config['tasks']['splitter_split_v3']['interval']
-            self.add_task(self.splitter_split_v3,
-                          args=[],
-                          wait=interval,
-                          timeout=180,
-                          task_name='8. Commission splitter V3')
+        # Commission splitters
+        if 'commission_splitters' in self.config['tasks']:
+            count = 0
+            for setting_commission in self.config['tasks']['commission_splitters']:
+                log.info("Jobs add: 7. Commission Splitter: {0}".format(setting_commission['address']))
+                interval = setting_commission['interval']
+                self.add_task(self.commission_splitter,
+                              args=[count],
+                              wait=interval,
+                              timeout=180,
+                              task_name="7. Commission Splitter: {0}".format(setting_commission['address']))
+                count += 1
 
         # Set max workers
         self.max_tasks = len(self.tasks)
