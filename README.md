@@ -4,6 +4,10 @@ This is a backend executor jobs. Periodic tasks that runs different jobs,
 that call the contracts and asks if they are ready to execute it. This jobs 
 run async of the app, and call directly to the contract through node. 
 
+Note: This is for protocol V1, if you are looking for automator in V2 please use 
+[this link ](https://github.com/money-on-chain/stable-protocol-automator-v2)
+
+
 ### Currents tasks
 
  1. Contract liquidation
@@ -12,7 +16,7 @@ run async of the app, and call directly to the contract through node.
  4. Contract pay TC holders
  5. Contract calculate EMA
  6. Oracle Compute: Check expiration of price in Oracle.
- 7. Execute Commission splitter
+ 7. Execute Commission splitter V2
  8. Execute Commission splitter V3
  
  

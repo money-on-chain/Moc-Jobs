@@ -9,11 +9,8 @@ while getopts ":e:c:i:r:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
-             ((e=="bnb_testnet" || e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" || e=="ec2_rdoc_alphatestnet" || e=="ec2_rdoc_testnet" || e=="ec2_rdoc_mainnet")) || usage
+             ((e == "ec2_alphatestnet" || e=="ec2_testnet" || e=="ec2_mainnet" )) || usage
             case $e in
-                bnb_testnet)
-                    ENV=$e
-                    ;;
                 ec2_alphatestnet)
                     ENV=$e
                     ;;
@@ -21,15 +18,6 @@ while getopts ":e:c:i:r:" o; do
                     ENV=$e
                     ;;
                 ec2_mainnet)
-                    ENV=$e
-                    ;;
-                ec2_rdoc_alphatestnet)
-                    ENV=$e
-                    ;;
-                ec2_rdoc_testnet)
-                    ENV=$e
-                    ;;
-                ec2_rdoc_mainnet)
                     ENV=$e
                     ;;
                 *)
